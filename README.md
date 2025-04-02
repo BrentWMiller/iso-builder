@@ -1,6 +1,6 @@
 # Isometric Block Builder
 
-A creative 3D block-building game built with React Three Fiber, inspired by games like Minecraft but with an isometric perspective.
+A creative 3D block-building game built with React Three Fiber with an isometric perspective.
 
 ## Features
 
