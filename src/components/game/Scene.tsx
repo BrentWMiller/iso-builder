@@ -4,9 +4,25 @@ import { useGameStore } from '../../store/gameState';
 import { GRID_SIZE } from '../../constants';
 import Grid from './Grid';
 import Block from './Block';
+import { Vector3 } from 'three';
 
 export default function Scene() {
   const blocks = useGameStore((state) => state.blocks);
+  const addBlock = useGameStore((state) => state.addBlock);
+  const selectedBlockType = useGameStore((state) => state.selectedBlockType);
+  const selectedColor = useGameStore((state) => state.selectedColor);
+
+  const handleBlockClick = (position: Vector3) => {
+    const gridX = Math.floor(position.x) + 0.5;
+    const gridZ = Math.floor(position.z) + 0.5;
+    const newPosition = new Vector3(gridX, position.y + 1, gridZ);
+
+    addBlock({
+      position: newPosition,
+      type: selectedBlockType,
+      color: selectedColor,
+    });
+  };
 
   return (
     <Canvas
@@ -40,7 +56,7 @@ export default function Scene() {
       <Grid />
 
       {blocks.map((block) => (
-        <Block key={block.id} {...block} />
+        <Block key={block.id} position={block.position} color={block.color} onBlockClick={handleBlockClick} />
       ))}
     </Canvas>
   );
