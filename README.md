@@ -1,54 +1,167 @@
-# React + TypeScript + Vite
+# Isometric Block Builder
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A creative 3D block-building game built with React Three Fiber, inspired by games like Minecraft but with an isometric perspective.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Core Mechanics
 
-## Expanding the ESLint configuration
+- Isometric camera perspective with fixed viewing angle
+- Block placement system with grid snapping
+- Block stacking and side attachment mechanics
+- Block type selection system
+- Block removal/destruction
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Block Properties
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- Different block types (basic cubes, stairs, slabs)
+- Block textures and materials
+- Basic color customization
+- Block highlighting on hover
+
+### User Interface
+
+- Block selection toolbar
+- Simple HUD for game controls
+- Block type inventory
+- Undo/Redo functionality
+- Save/Load system for creations
+
+### Interaction
+
+- Mouse-based block placement
+- Camera rotation controls (45-degree increments)
+- Zoom controls
+- Block face detection for accurate placement
+
+## Technology Stack
+
+### Core Technologies
+
+- React 18+
+- Three.js
+- React Three Fiber
+- React Three Drei (for helper components)
+- TypeScript
+- Vite (for build tooling)
+
+### State Management
+
+- Zustand (for game state)
+- Immer (for immutable state updates)
+
+### Development Tools
+
+- ESLint
+- Prettier
+- Vitest (testing)
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── game/
+│   │   ├── Block.tsx
+│   │   ├── Grid.tsx
+│   │   ├── Scene.tsx
+│   │   └── Controls.tsx
+│   └── ui/
+│       ├── Toolbar.tsx
+│       ├── HUD.tsx
+│       └── Menu.tsx
+├── hooks/
+│   ├── useBlockPlacement.ts
+│   ├── useGameControls.ts
+│   └── useGrid.ts
+├── store/
+│   ├── gameState.ts
+│   └── types.ts
+├── utils/
+│   ├── grid.ts
+│   ├── math.ts
+│   └── collision.ts
+└── App.tsx
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Code Practices
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Performance Optimization
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+- Use React Three Fiber's built-in performance optimizations
+- Implement object pooling for blocks
+- Use instanced meshes for identical blocks
+- Implement chunking for large builds
+- Optimize raycasting operations
+
+### State Management
+
+- Centralize game state in Zustand store
+- Use atomic state updates
+- Implement undo/redo history
+- Separate UI state from game state
+
+### Code Quality
+
+- Strong TypeScript typing
+- Component composition over inheritance
+- Custom hooks for reusable logic
+- Pure functions for game mechanics
+- Consistent naming conventions
+
+### Testing Strategy
+
+- Unit tests for utility functions
+- Component tests for UI elements
+- Integration tests for game mechanics
+- Performance benchmarks
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies:
+
+```bash
+npm install
 ```
+
+3. Start the development server:
+
+```bash
+npm run dev
+```
+
+## Development Workflow
+
+1. Create feature branches from `main`
+2. Follow conventional commits
+3. Submit PRs with description of changes
+4. Ensure all tests pass
+5. Review and merge
+
+## Future Enhancements
+
+- Multiplayer support
+- Custom texture support
+- Advanced block types
+- World generation
+- Physics simulation
+- Mobile support
+
+## Performance Targets
+
+- 60 FPS minimum on modern browsers
+- Support for 1000+ blocks in scene
+- Responsive controls
+- < 100ms input latency
+
+## Browser Support
+
+- Chrome 90+
+- Firefox 90+
+- Safari 14+
+- Edge 90+
+
+## License
+
+MIT License
