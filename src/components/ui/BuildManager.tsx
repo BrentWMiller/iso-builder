@@ -1,10 +1,10 @@
 import { useState, ChangeEvent } from 'react';
 import { useGameStore } from '../../store/gameState';
 import { SavedBuild } from '../../store/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from './button';
+import { Input } from './input';
+import { Textarea } from './textarea';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './dropdown-menu';
 import { Menu, Save, Upload, Download, Copy, Trash2, X } from 'lucide-react';
 
 export default function BuildManager() {
@@ -27,7 +27,8 @@ export default function BuildManager() {
     }
   };
 
-  const handleImport = () => {
+  const handleImport = (e: React.FormEvent) => {
+    e.preventDefault();
     if (importData.trim()) {
       try {
         // Try to decode the input to validate it's base64
@@ -164,23 +165,21 @@ export default function BuildManager() {
                 )}
               </Button>
               {isImporting && (
-                <div className='flex flex-col gap-2'>
+                <form onSubmit={handleImport} data-testid='import-form'>
                   <Textarea
-                    value={importData}
-                    onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setImportData(e.target.value)}
                     placeholder='Paste build data here'
+                    value={importData}
+                    onChange={(e) => setImportData(e.target.value)}
                     className='max-h-48 bg-white/50 dark:bg-neutral-800/50 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 border-neutral-200 dark:border-neutral-800 resize-none'
                     rows={4}
                   />
-                  <Button
-                    onClick={handleImport}
-                    variant='secondary'
-                    className='bg-neutral-200/80 dark:bg-neutral-800/80 hover:bg-neutral-300/80 dark:hover:bg-neutral-700/80'
-                  >
-                    <Upload className='h-4 w-4 mr-2' />
-                    Import
-                  </Button>
-                </div>
+                  <div className='flex gap-2 mt-2'>
+                    <Button type='submit'>Import</Button>
+                    <Button variant='outline' onClick={() => setIsImporting(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
               )}
             </div>
           </div>
