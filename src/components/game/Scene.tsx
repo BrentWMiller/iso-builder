@@ -54,12 +54,12 @@ function SceneContent() {
       <SoftShadows size={10} focus={0.25} samples={10} />
 
       {/* Ambient light for base illumination */}
-      <ambientLight intensity={0.6} />
+      <ambientLight intensity={0.95} />
 
       {/* Main directional light for primary shadows */}
       <directionalLight
-        position={[10, 10, 5]}
-        intensity={1}
+        position={[15, 15, 10]}
+        intensity={2}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-20}
@@ -70,7 +70,10 @@ function SceneContent() {
       />
 
       {/* Fill light for better definition */}
-      <directionalLight position={[-10, 5, -10]} intensity={0.4} />
+      <directionalLight position={[-15, 10, -10]} intensity={1.8} />
+
+      {/* Point light for localized color enhancement */}
+      <pointLight position={[0, 15, 0]} intensity={1.5} distance={30} decay={1} />
 
       <OrbitControls
         enableDamping
