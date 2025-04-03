@@ -11,10 +11,26 @@ export default function Grid() {
   const selectedBlockType = useGameStore((state) => state.selectedBlockType);
   const selectedColor = useGameStore((state) => state.selectedColor);
 
-  const getHighestBlockAt = (x: number, z: number) => {
+  const getBlocksInColumn = (x: number, z: number) => {
     return blocks
       .filter((block) => Math.abs(block.position.x - x) < 0.1 && Math.abs(block.position.z - z) < 0.1)
-      .reduce((maxY, block) => Math.max(maxY, block.position.y), -1); // Start at -1 to handle ground level
+      .sort((a, b) => a.position.y - b.position.y);
+  };
+
+  const findLowestEmptyPosition = (x: number, z: number) => {
+    const columnBlocks = getBlocksInColumn(x, z);
+    let y = 0; // Start at ground level
+
+    // Find the first gap in the stack
+    for (const block of columnBlocks) {
+      if (Math.abs(block.position.y - y) > 0.1) {
+        // Found a gap
+        break;
+      }
+      y++;
+    }
+
+    return y;
   };
 
   const handleClick = (event: { point: Vector3; stopPropagation: () => void; face?: { normal: Vector3 } }) => {
@@ -42,9 +58,9 @@ export default function Grid() {
       }
     }
 
-    // If clicking on the grid, place the block at ground level
-    const highestY = getHighestBlockAt(gridX, gridZ);
-    const position = new Vector3(gridX, highestY + 1, gridZ);
+    // Place block at the lowest empty position in the column
+    const y = findLowestEmptyPosition(gridX, gridZ);
+    const position = new Vector3(gridX, y, gridZ);
 
     addBlock({
       position,
