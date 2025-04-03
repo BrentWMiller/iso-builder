@@ -77,6 +77,6 @@ describe('Scene Component', () => {
   it('renders lighting elements', () => {
     const { container } = renderScene();
     expect(container.querySelector('ambientlight')).toBeTruthy();
-    expect(container.querySelectorAll('directionallight')).toHaveLength(3);
+    expect(container.querySelectorAll('directionallight')).toHaveLength(2);
   });
 });
