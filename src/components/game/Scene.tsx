@@ -6,9 +6,7 @@ import Grid from './Grid';
 import Block from './Block';
 import { Raycaster, Vector2 } from 'three';
 import { useEffect } from 'react';
-
-// Add hover state to the game store
-const useHoverStore = useGameStore;
+import ColorToolbar from '../ui/ColorToolbar';
 
 function SceneContent() {
   const blocks = useGameStore((state) => state.blocks);
@@ -90,17 +88,24 @@ function SceneContent() {
 
 export default function Scene() {
   return (
-    <Canvas
-      camera={{
-        position: [15, 15, 15],
-        fov: 50,
-        near: 0.1,
-        far: 1000,
-      }}
-      shadows='soft'
-      style={{ width: '100vw', height: '100vh' }}
-    >
-      <SceneContent />
-    </Canvas>
+    <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+      <Canvas
+        camera={{
+          position: [15, 15, 15],
+          fov: 50,
+          near: 0.1,
+          far: 1000,
+        }}
+        shadows='soft'
+        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+      >
+        <SceneContent />
+      </Canvas>
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+        <div style={{ pointerEvents: 'auto' }}>
+          <ColorToolbar />
+        </div>
+      </div>
+    </div>
   );
 }
