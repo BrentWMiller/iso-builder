@@ -56,9 +56,9 @@ export default function Grid() {
   return (
     <group>
       {/* Main grid plane */}
-      <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]} position={[GRID_SIZE / 2, -0.5, GRID_SIZE / 2]} onClick={handleClick}>
+      <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]} position={[GRID_SIZE / 2, -0.5, GRID_SIZE / 2]} onClick={handleClick} receiveShadow>
         <planeGeometry args={[GRID_SIZE, GRID_SIZE]} />
-        <meshToonMaterial color='#2a2a2a' transparent opacity={0.6} />
+        <meshStandardMaterial color='#2a2a2a' transparent={true} opacity={0.6} roughness={0.9} metalness={0.1} />
       </mesh>
 
       {/* Grid lines */}
