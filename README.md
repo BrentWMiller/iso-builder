@@ -27,23 +27,18 @@ A creative 3D block-building game built with React Three Fiber with an isometric
 - Undo/Redo functionality
 - Save/Load system for creations
 
-### Interaction
-
-- Mouse-based block placement
-- Camera rotation controls (45-degree increments)
-- Zoom controls
-- Block face detection for accurate placement
-
 ## Technology Stack
 
 ### Core Technologies
 
-- React 18+
+- React 19
 - Three.js
 - React Three Fiber
-- React Three Drei (for helper components)
+- React Three Drei
 - TypeScript
-- Vite (for build tooling)
+- Vite
+- TailwindCSS
+- Framer Motion
 
 ### State Management
 
@@ -55,66 +50,22 @@ A creative 3D block-building game built with React Three Fiber with an isometric
 - ESLint
 - Prettier
 - Vitest (testing)
+- Husky (git hooks)
 
 ## Project Structure
 
 ```
 src/
-├── components/
-│   ├── game/
-│   │   ├── Block.tsx
-│   │   ├── Grid.tsx
-│   │   ├── Scene.tsx
-│   │   └── Controls.tsx
-│   └── ui/
-│       ├── Toolbar.tsx
-│       ├── HUD.tsx
-│       └── Menu.tsx
-├── hooks/
-│   ├── useBlockPlacement.ts
-│   ├── useGameControls.ts
-│   └── useGrid.ts
-├── store/
-│   ├── gameState.ts
-│   └── types.ts
-├── utils/
-│   ├── grid.ts
-│   ├── math.ts
-│   └── collision.ts
-└── App.tsx
+├── assets/         # Static assets and textures
+├── components/     # React components
+├── hooks/          # Custom React hooks
+├── store/          # Zustand store and state management
+├── utils/          # Utility functions and helpers
+├── App.tsx         # Main application component
+├── main.tsx        # Application entry point
+├── setupTests.ts   # Test configuration
+└── constants.ts    # Application constants
 ```
-
-## Code Practices
-
-### Performance Optimization
-
-- Use React Three Fiber's built-in performance optimizations
-- Implement object pooling for blocks
-- Use instanced meshes for identical blocks
-- Implement chunking for large builds
-- Optimize raycasting operations
-
-### State Management
-
-- Centralize game state in Zustand store
-- Use atomic state updates
-- Implement undo/redo history
-- Separate UI state from game state
-
-### Code Quality
-
-- Strong TypeScript typing
-- Component composition over inheritance
-- Custom hooks for reusable logic
-- Pure functions for game mechanics
-- Consistent naming conventions
-
-### Testing Strategy
-
-- Unit tests for utility functions
-- Component tests for UI elements
-- Integration tests for game mechanics
-- Performance benchmarks
 
 ## Getting Started
 
@@ -139,21 +90,14 @@ npm run dev
 4. Ensure all tests pass
 5. Review and merge
 
-## Future Enhancements
+## Available Scripts
 
-- Multiplayer support
-- Custom texture support
-- Advanced block types
-- World generation
-- Physics simulation
-- Mobile support
-
-## Performance Targets
-
-- 60 FPS minimum on modern browsers
-- Support for 1000+ blocks in scene
-- Responsive controls
-- < 100ms input latency
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run test` - Run tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run lint` - Run ESLint
 
 ## Browser Support
 
