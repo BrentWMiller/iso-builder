@@ -1,5 +1,5 @@
 import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls, SoftShadows } from '@react-three/drei';
 import { useGameStore } from '../../store/gameState';
 import { GRID_SIZE } from '../../constants';
 import Grid from './Grid';
@@ -50,6 +50,8 @@ function SceneContent() {
 
   return (
     <>
+      <SoftShadows size={25} focus={0} samples={10} />
+
       {/* Ambient light for base illumination */}
       <ambientLight intensity={0.6} />
 
@@ -63,6 +65,7 @@ function SceneContent() {
         shadow-camera-right={20}
         shadow-camera-top={20}
         shadow-camera-bottom={-20}
+        shadow-bias={-0.0001}
       />
 
       {/* Fill light for better definition */}
@@ -96,7 +99,7 @@ export default function Scene() {
           near: 0.1,
           far: 1000,
         }}
-        shadows='soft'
+        shadows
         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
       >
         <SceneContent />
