@@ -1,6 +1,7 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { produce } from 'immer';
-import { BlockType, GameState, GameActions, SavedBuild } from './types';
+import { BlockType, GameState, GameActions, SavedBuild, Block } from './types';
 import { Vector3 } from 'three';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -17,152 +18,201 @@ const initialState: GameState = {
   savedBuilds: [],
 };
 
-const store = create<GameState & GameActions>((set) => ({
-  ...initialState,
+interface Vector3Like {
+  x: number;
+  y: number;
+  z: number;
+}
 
-  addBlock: (block) =>
-    set(
-      produce((state: GameState) => {
-        const newBlock = { ...block, id: generateId() };
-        state.blocks.push(newBlock);
+interface BlockLike {
+  id: string;
+  position: Vector3Like;
+  type: BlockType;
+  color: string;
+}
 
-        // Update history
-        state.history = state.history.slice(0, state.historyIndex + 1);
-        state.history.push([...state.blocks]);
-        state.historyIndex++;
-      })
-    ),
+// Helper function to convert plain objects to Vector3
+const convertToVector3 = (obj: Vector3Like | Vector3): Vector3 => {
+  if (obj instanceof Vector3) {
+    return obj;
+  }
+  return new Vector3(obj.x, obj.y, obj.z);
+};
 
-  removeBlock: (id) =>
-    set(
-      produce((state: GameState) => {
-        state.blocks = state.blocks.filter((block) => block.id !== id);
+// Helper function to convert blocks with Vector3 positions
+const convertBlocksToVector3 = (blocks: BlockLike[]): Block[] => {
+  return blocks.map((block) => ({
+    ...block,
+    position: convertToVector3(block.position),
+  }));
+};
 
-        // Update history
-        state.history = state.history.slice(0, state.historyIndex + 1);
-        state.history.push([...state.blocks]);
-        state.historyIndex++;
-      })
-    ),
+const store = create<GameState & GameActions>()(
+  persist(
+    (set) => ({
+      ...initialState,
 
-  setSelectedBlockType: (type: BlockType) =>
-    set(
-      produce((state: GameState) => {
-        state.selectedBlockType = type;
-      })
-    ),
+      addBlock: (block) =>
+        set(
+          produce((state: GameState) => {
+            const newBlock = { ...block, id: generateId() };
+            state.blocks.push(newBlock);
 
-  setSelectedColor: (color: string) =>
-    set(
-      produce((state: GameState) => {
-        state.selectedColor = color;
-      })
-    ),
+            // Update history
+            state.history = state.history.slice(0, state.historyIndex + 1);
+            state.history.push([...state.blocks]);
+            state.historyIndex++;
+          })
+        ),
 
-  setHoveredBlock: (id: string | null) =>
-    set(
-      produce((state: GameState) => {
-        state.hoveredBlockId = id;
-      })
-    ),
+      removeBlock: (id) =>
+        set(
+          produce((state: GameState) => {
+            state.blocks = state.blocks.filter((block) => block.id !== id);
 
-  setHoveredFace: (index: number | null) =>
-    set(
-      produce((state: GameState) => {
-        state.hoveredFaceIndex = index;
-      })
-    ),
+            // Update history
+            state.history = state.history.slice(0, state.historyIndex + 1);
+            state.history.push([...state.blocks]);
+            state.historyIndex++;
+          })
+        ),
 
-  toggleTheme: () =>
-    set(
-      produce((state: GameState) => {
-        state.theme = state.theme === 'dark' ? 'light' : 'dark';
-      })
-    ),
+      setSelectedBlockType: (type: BlockType) =>
+        set(
+          produce((state: GameState) => {
+            state.selectedBlockType = type;
+          })
+        ),
 
-  undo: () =>
-    set(
-      produce((state: GameState) => {
-        if (state.historyIndex > 0) {
-          state.historyIndex--;
-          state.blocks = [...state.history[state.historyIndex]];
-        }
-      })
-    ),
+      setSelectedColor: (color: string) =>
+        set(
+          produce((state: GameState) => {
+            state.selectedColor = color;
+          })
+        ),
 
-  redo: () =>
-    set(
-      produce((state: GameState) => {
-        if (state.historyIndex < state.history.length - 1) {
-          state.historyIndex++;
-          state.blocks = [...state.history[state.historyIndex]];
-        }
-      })
-    ),
+      setHoveredBlock: (id: string | null) =>
+        set(
+          produce((state: GameState) => {
+            state.hoveredBlockId = id;
+          })
+        ),
 
-  saveBuild: (name: string) =>
-    set(
-      produce((state: GameState) => {
-        const newBuild: SavedBuild = {
-          id: generateId(),
-          name,
-          blocks: [...state.blocks],
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        };
-        state.savedBuilds.push(newBuild);
-      })
-    ),
+      setHoveredFace: (index: number | null) =>
+        set(
+          produce((state: GameState) => {
+            state.hoveredFaceIndex = index;
+          })
+        ),
 
-  loadBuild: (id: string) =>
-    set(
-      produce((state: GameState) => {
-        const build = state.savedBuilds.find((b) => b.id === id);
-        if (build) {
-          // Create new Vector3 instances for each block's position
-          state.blocks = build.blocks.map((block) => ({
-            ...block,
-            position: new Vector3(block.position.x, block.position.y, block.position.z),
+      toggleTheme: () =>
+        set(
+          produce((state: GameState) => {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+          })
+        ),
+
+      undo: () =>
+        set(
+          produce((state: GameState) => {
+            if (state.historyIndex > 0) {
+              state.historyIndex--;
+              state.blocks = [...state.history[state.historyIndex]];
+            }
+          })
+        ),
+
+      redo: () =>
+        set(
+          produce((state: GameState) => {
+            if (state.historyIndex < state.history.length - 1) {
+              state.historyIndex++;
+              state.blocks = [...state.history[state.historyIndex]];
+            }
+          })
+        ),
+
+      saveBuild: (name: string) =>
+        set(
+          produce((state: GameState) => {
+            const newBuild: SavedBuild = {
+              id: generateId(),
+              name,
+              blocks: [...state.blocks],
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+            };
+            state.savedBuilds.push(newBuild);
+          })
+        ),
+
+      loadBuild: (id: string) =>
+        set(
+          produce((state: GameState) => {
+            const build = state.savedBuilds.find((b) => b.id === id);
+            if (build) {
+              state.blocks = convertBlocksToVector3(build.blocks);
+              state.history = [[...state.blocks]];
+              state.historyIndex = 0;
+            }
+          })
+        ),
+
+      deleteBuild: (id: string) =>
+        set(
+          produce((state: GameState) => {
+            state.savedBuilds = state.savedBuilds.filter((build) => build.id !== id);
+          })
+        ),
+
+      exportBuild: (id: string): string => {
+        const state = store.getState();
+        const build = state.savedBuilds.find((b: SavedBuild) => b.id === id);
+        if (!build) return '';
+        return JSON.stringify(build);
+      },
+
+      importBuild: (data: string) =>
+        set(
+          produce((state: GameState) => {
+            try {
+              const build = JSON.parse(data) as SavedBuild;
+              build.blocks = convertBlocksToVector3(build.blocks);
+              build.id = generateId();
+              build.createdAt = Date.now();
+              build.updatedAt = Date.now();
+              state.savedBuilds.push(build);
+            } catch (error) {
+              console.error('Failed to import build:', error);
+            }
+          })
+        ),
+    }),
+    {
+      name: 'iso-builder-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        blocks: state.blocks,
+        selectedBlockType: state.selectedBlockType,
+        selectedColor: state.selectedColor,
+        history: state.history,
+        historyIndex: state.historyIndex,
+        theme: state.theme,
+        savedBuilds: state.savedBuilds,
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // Convert all Vector3 positions in blocks and history
+          state.blocks = convertBlocksToVector3(state.blocks);
+          state.history = state.history.map((blocks) => convertBlocksToVector3(blocks));
+          state.savedBuilds = state.savedBuilds.map((build) => ({
+            ...build,
+            blocks: convertBlocksToVector3(build.blocks),
           }));
-          state.history = [[...state.blocks]];
-          state.historyIndex = 0;
         }
-      })
-    ),
-
-  deleteBuild: (id: string) =>
-    set(
-      produce((state: GameState) => {
-        state.savedBuilds = state.savedBuilds.filter((build) => build.id !== id);
-      })
-    ),
-
-  exportBuild: (id: string): string => {
-    const state = store.getState();
-    const build = state.savedBuilds.find((b: SavedBuild) => b.id === id);
-    if (!build) return '';
-    return JSON.stringify(build);
-  },
-
-  importBuild: (data: string) =>
-    set(
-      produce((state: GameState) => {
-        try {
-          const build = JSON.parse(data) as SavedBuild;
-          // Create new Vector3 instances for each block's position
-          build.blocks = build.blocks.map((block) => ({
-            ...block,
-            position: new Vector3(block.position.x, block.position.y, block.position.z),
-          }));
-          build.id = generateId();
-          build.createdAt = Date.now();
-          build.updatedAt = Date.now();
-          state.savedBuilds.push(build);
-        } catch (error) {
-          console.error('Failed to import build:', error);
-        }
-      })
-    ),
-}));
+      },
+    }
+  )
+);
 
 export const useGameStore = store;
