@@ -22,19 +22,19 @@ export default function Block({ position, color, id }: BlockProps) {
 
   // Create materials for each face
   const materials = [
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05 }), // right
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05 }), // left
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05 }), // top
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05 }), // bottom
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05 }), // front
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05 }), // back
+    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // right
+    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // left
+    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // top
+    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // bottom
+    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // front
+    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // back
   ];
 
   // Update material colors based on hover state
   useEffect(() => {
     materials.forEach((material, index) => {
       if (hoveredBlockId === id && hoveredFaceIndex === index) {
-        material.color.setHex(0xadd8e6); // Light blue highlight
+        material.color.setHex(0xadd8e6); // Simple light blue highlight
       } else {
         material.color.setStyle(color);
       }
