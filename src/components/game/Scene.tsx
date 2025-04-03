@@ -7,6 +7,7 @@ import Block from './Block';
 import { Raycaster, Vector2 } from 'three';
 import { useEffect } from 'react';
 import ColorToolbar from '../ui/ColorToolbar';
+import ThemeToggle from '../ui/ThemeToggle';
 
 function SceneContent() {
   const blocks = useGameStore((state) => state.blocks);
@@ -90,8 +91,17 @@ function SceneContent() {
 }
 
 export default function Scene() {
+  const theme = useGameStore((state) => state.theme);
+
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+    <div
+      style={{
+        position: 'relative',
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: theme === 'dark' ? '#242424' : '#ffffff',
+      }}
+    >
       <Canvas
         camera={{
           position: [15, 15, 15],
@@ -107,6 +117,7 @@ export default function Scene() {
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
         <div style={{ pointerEvents: 'auto' }}>
           <ColorToolbar />
+          <ThemeToggle />
         </div>
       </div>
     </div>

@@ -17,6 +17,7 @@ export interface GameState {
   historyIndex: number;
   hoveredBlockId: string | null;
   hoveredFaceIndex: number | null;
+  theme: 'light' | 'dark';
 }
 
 export interface GameActions {
@@ -26,6 +27,7 @@ export interface GameActions {
   setSelectedColor: (color: string) => void;
   setHoveredBlock: (id: string | null) => void;
   setHoveredFace: (index: number | null) => void;
+  toggleTheme: () => void;
   undo: () => void;
   redo: () => void;
 }

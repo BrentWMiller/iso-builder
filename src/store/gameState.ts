@@ -12,6 +12,7 @@ const initialState: GameState = {
   historyIndex: 0,
   hoveredBlockId: null,
   hoveredFaceIndex: null,
+  theme: 'dark',
 };
 
 export const useGameStore = create<GameState & GameActions>((set) => ({
@@ -67,6 +68,13 @@ export const useGameStore = create<GameState & GameActions>((set) => ({
     set(
       produce((state: GameState) => {
         state.hoveredFaceIndex = index;
+      })
+    ),
+
+  toggleTheme: () =>
+    set(
+      produce((state: GameState) => {
+        state.theme = state.theme === 'dark' ? 'light' : 'dark';
       })
     ),
 

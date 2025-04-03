@@ -1,22 +1,29 @@
 import { GRID_SIZE } from '../../constants';
 import { Grid as DreiGrid } from '@react-three/drei';
 import SoftCirclePlane from './SoftCirclePlane';
+import { useGameStore } from '../../store/gameState';
 
 export default function Grid() {
+  const theme = useGameStore((state) => state.theme);
+
+  const gridColor = theme === 'dark' ? '#2a2a2a' : '#e5e5e5';
+  const cellColor = theme === 'dark' ? '#000000' : '#cccccc';
+  const sectionColor = theme === 'dark' ? '#444444' : '#999999';
+
   return (
     <group>
       {/* Main grid plane */}
-      <SoftCirclePlane size={GRID_SIZE} color='#2a2a2a' opacity={0.5} />
+      <SoftCirclePlane size={GRID_SIZE} color={gridColor} opacity={0.5} />
 
       {/* Grid lines */}
       <DreiGrid
         infiniteGrid
         cellSize={1}
         cellThickness={1}
-        cellColor='#000000'
+        cellColor={cellColor}
         sectionSize={1}
         sectionThickness={1}
-        sectionColor='#444444'
+        sectionColor={sectionColor}
         fadeDistance={30}
         fadeStrength={1}
         followCamera={false}
