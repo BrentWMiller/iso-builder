@@ -2,14 +2,16 @@ import { useRef, useEffect } from 'react';
 import { Mesh, Vector3, MeshStandardMaterial } from 'three';
 import { useGameStore } from '../../store/gameState';
 import { useDragDetection } from '../../hooks/useDragDetection';
+import { blockRegistry } from '../../plugins/blocks';
 
 interface BlockProps {
   position: Vector3;
   color: string;
   id: string;
+  type: string;
 }
 
-export default function Block({ position, color, id }: BlockProps) {
+export default function Block({ position, color, id, type }: BlockProps) {
   const ref = useRef<Mesh>(null);
   const { isDragging, handlePointerDown, handlePointerMove: handleDragMove, handlePointerUp } = useDragDetection();
   const addBlock = useGameStore((state) => state.addBlock);
@@ -20,39 +22,43 @@ export default function Block({ position, color, id }: BlockProps) {
   const hoveredBlockId = useGameStore((state) => state.hoveredBlockId);
   const hoveredFaceIndex = useGameStore((state) => state.hoveredFaceIndex);
 
-  // Create materials for each face
-  const materials = [
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // right
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // left
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // top
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // bottom
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // front
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // back
-  ];
+  // Get the block plugin
+  const plugin = blockRegistry.get(type);
+
+  // Create mesh using the plugin
+  const mesh = plugin?.createMesh(position, color);
 
   // Update material colors based on hover state
   useEffect(() => {
-    materials.forEach((material, index) => {
+    if (!mesh || !ref.current) return;
+
+    const updateMaterialColor = (material: MeshStandardMaterial, index: number) => {
       if (hoveredBlockId === id && hoveredFaceIndex === index) {
         material.color.setHex(0xadd8e6); // Simple light blue highlight
       } else {
         material.color.setStyle(color);
       }
-    });
+    };
+
+    if (mesh.material instanceof Array) {
+      mesh.material.forEach((material, index) => {
+        updateMaterialColor(material as MeshStandardMaterial, index);
+      });
+    } else if (mesh.material) {
+      updateMaterialColor(mesh.material as MeshStandardMaterial, hoveredFaceIndex ?? 0);
+    }
 
     // Cleanup function to reset materials when component unmounts
     return () => {
-      materials.forEach((material) => {
-        material.color.setStyle(color);
-      });
+      if (mesh.material instanceof Array) {
+        mesh.material.forEach((material) => {
+          (material as MeshStandardMaterial).color.setStyle(color);
+        });
+      } else if (mesh.material) {
+        (mesh.material as MeshStandardMaterial).color.setStyle(color);
+      }
     };
-  }, [color, id, hoveredBlockId, hoveredFaceIndex]);
-
-  const isBlockAtPosition = (pos: Vector3) => {
-    return blocks.some(
-      (block) => Math.abs(block.position.x - pos.x) < 0.1 && Math.abs(block.position.y - pos.y) < 0.1 && Math.abs(block.position.z - pos.z) < 0.1
-    );
-  };
+  }, [color, id, hoveredBlockId, hoveredFaceIndex, mesh]);
 
   const handleClick = (event: { stopPropagation: () => void; face?: { normal: Vector3 }; button?: number }) => {
     event.stopPropagation();
@@ -67,14 +73,13 @@ export default function Block({ position, color, id }: BlockProps) {
     }
 
     // Left click to add block
-    if (!event.face) return;
+    if (!event.face || !plugin) return;
 
-    // Calculate new block position based on face normal
-    const normal = event.face.normal;
-    const newPosition = new Vector3(position.x + normal.x, position.y + normal.y, position.z + normal.z);
+    // Calculate new block position using the plugin
+    const newPosition = plugin.getPlacementPosition(position, event.face.normal);
 
-    // Check if there's already a block at the target position
-    if (isBlockAtPosition(newPosition)) return;
+    // Check if we can place the block using the plugin
+    if (!plugin.canPlace(newPosition, blocks)) return;
 
     // Add the new block
     addBlock({
@@ -84,10 +89,15 @@ export default function Block({ position, color, id }: BlockProps) {
     });
   };
 
+  if (!plugin || !mesh) {
+    console.error(`Block plugin not found for type: ${type}`);
+    return null;
+  }
+
   return (
-    <mesh
+    <primitive
       ref={ref}
-      position={position}
+      object={mesh}
       onClick={handleClick}
       onContextMenu={handleClick}
       onPointerDown={handlePointerDown}
@@ -97,11 +107,6 @@ export default function Block({ position, color, id }: BlockProps) {
       userData={{ blockId: id }}
       castShadow
       receiveShadow
-    >
-      <boxGeometry args={[1, 1, 1]} />
-      {materials.map((material, index) => (
-        <primitive key={index} object={material} attach={`material-${index}`} />
-      ))}
-    </mesh>
+    />
   );
 }

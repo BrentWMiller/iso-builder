@@ -6,9 +6,6 @@ import Grid from './Grid';
 import Block from './Block';
 import { Raycaster, Vector2 } from 'three';
 import { useEffect } from 'react';
-import ColorToolbar from '../ui/ColorToolbar';
-import ThemeToggle from '../ui/ThemeToggle';
-import BuildManager from '../ui/BuildManager';
 
 function SceneContent() {
   const blocks = useGameStore((state) => state.blocks);
@@ -86,10 +83,9 @@ function SceneContent() {
         target={[GRID_SIZE / 2, 0, GRID_SIZE / 2]}
       />
 
-      <Grid />
-
+      <Grid size={GRID_SIZE} />
       {blocks.map((block) => (
-        <Block key={block.id} id={block.id} position={block.position} color={block.color} />
+        <Block key={block.id} id={block.id} position={block.position} color={block.color} type={block.type} />
       ))}
     </>
   );
@@ -119,13 +115,6 @@ export default function Scene() {
       >
         <SceneContent />
       </Canvas>
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-        <div style={{ pointerEvents: 'auto' }}>
-          <ColorToolbar />
-          <ThemeToggle />
-          <BuildManager />
-        </div>
-      </div>
     </div>
   );
 }

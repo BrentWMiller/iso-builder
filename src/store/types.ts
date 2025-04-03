@@ -1,6 +1,6 @@
 import { Vector3 } from 'three';
 
-export type BlockType = 'cube' | 'stair' | 'slab';
+export type BlockType = string;
 
 export interface Block {
   id: string;

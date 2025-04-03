@@ -3,7 +3,11 @@ import { Grid as DreiGrid } from '@react-three/drei';
 import SoftCirclePlane from './SoftCirclePlane';
 import { useGameStore } from '../../store/gameState';
 
-export default function Grid() {
+interface GridProps {
+  size?: number;
+}
+
+export default function Grid({ size = GRID_SIZE }: GridProps) {
   const theme = useGameStore((state) => state.theme);
 
   const gridColor = theme === 'dark' ? '#2a2a2a' : '#e5e5e5';
@@ -13,7 +17,7 @@ export default function Grid() {
   return (
     <group>
       {/* Main grid plane */}
-      <SoftCirclePlane size={GRID_SIZE} color={gridColor} opacity={0.5} />
+      <SoftCirclePlane size={size} color={gridColor} opacity={0.5} />
 
       {/* Grid lines */}
       <DreiGrid
@@ -27,7 +31,7 @@ export default function Grid() {
         fadeDistance={30}
         fadeStrength={1}
         followCamera={false}
-        position={[GRID_SIZE / 2, -0.49, GRID_SIZE / 2]}
+        position={[size / 2, -0.49, size / 2]}
       />
     </group>
   );
