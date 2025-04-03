@@ -78,9 +78,10 @@ function SceneContent() {
       <OrbitControls
         enableDamping
         dampingFactor={0.05}
-        minDistance={5}
-        maxDistance={30}
-        maxPolarAngle={Math.PI / 2}
+        minDistance={10}
+        maxDistance={40}
+        minPolarAngle={Math.PI / 4}
+        maxPolarAngle={Math.PI / 4}
         target={[GRID_SIZE / 2, 0, GRID_SIZE / 2]}
       />
 
