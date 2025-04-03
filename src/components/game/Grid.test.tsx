@@ -4,16 +4,17 @@ import { Vector3 } from 'three';
 import Grid from './Grid';
 import { useGameStore } from '../../store/gameState';
 import type { Mock } from 'vitest';
+import { Canvas } from '@react-three/fiber';
 
 // Mock the game store
 vi.mock('../../store/gameState', () => ({
   useGameStore: vi.fn(),
 }));
 
-// Mock Three.js components
-vi.mock('@react-three/fiber', () => ({
-  Canvas: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
+// Test wrapper component that provides R3F context
+const TestWrapper = ({ children }: { children: React.ReactNode }) => {
+  return <Canvas>{children}</Canvas>;
+};
 
 describe('Grid Component', () => {
   const mockAddBlock = vi.fn();
@@ -34,11 +35,19 @@ describe('Grid Component', () => {
   });
 
   it('renders without crashing', () => {
-    render(<Grid />);
+    render(
+      <TestWrapper>
+        <Grid />
+      </TestWrapper>
+    );
   });
 
   it('places block on ground level when no blocks exist at position', () => {
-    const { container } = render(<Grid />);
+    const { container } = render(
+      <TestWrapper>
+        <Grid />
+      </TestWrapper>
+    );
 
     // Get the click handler from the Grid component
     const grid = container.firstChild as HTMLElement;
@@ -64,7 +73,11 @@ describe('Grid Component', () => {
   });
 
   it('stacks blocks on top of existing blocks when clicking block faces', () => {
-    const { container } = render(<Grid />);
+    const { container } = render(
+      <TestWrapper>
+        <Grid />
+      </TestWrapper>
+    );
 
     // Get the click handler from the Grid component
     const grid = container.firstChild as HTMLElement;
