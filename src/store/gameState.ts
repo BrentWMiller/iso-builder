@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { produce } from 'immer';
 import { BlockType, GameState, GameActions, SavedBuild, Block } from './types';
 import { Vector3 } from 'three';
+import * as LZString from 'lz-string';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -239,19 +240,74 @@ const store = create<GameState & GameActions>()(
         const state = get();
         const build = state.savedBuilds.find((b: SavedBuild) => b.id === id);
         if (!build) return '';
-        return btoa(JSON.stringify(build));
+
+        // Optimize the data structure by removing unnecessary properties
+        const optimizedBuild = {
+          name: build.name,
+          blocks: build.blocks.map((block) => ({
+            position: {
+              x: block.position.x,
+              y: block.position.y,
+              z: block.position.z,
+            },
+            type: block.type,
+            color: block.color,
+          })),
+        };
+
+        // Compress with LZString (much smaller than btoa alone)
+        return LZString.compressToBase64(JSON.stringify(optimizedBuild));
       },
 
       importBuild: (data: string) =>
         set(
           produce((state: GameState) => {
             try {
-              const decodedData = atob(data);
-              const build = JSON.parse(decodedData) as SavedBuild;
-              build.blocks = convertBlocksToVector3(build.blocks);
-              build.id = generateId();
-              build.createdAt = Date.now();
-              build.updatedAt = Date.now();
+              // Try to decompress with LZString first
+              let decodedData;
+              let buildData;
+
+              try {
+                // Try LZString decompression for new format
+                decodedData = LZString.decompressFromBase64(data);
+                buildData = JSON.parse(decodedData);
+              } catch {
+                // Fallback to old format (btoa)
+                try {
+                  decodedData = atob(data);
+                  buildData = JSON.parse(decodedData);
+                } catch (e2) {
+                  console.error('Failed to decode build data', e2);
+                  return;
+                }
+              }
+
+              // Handle the optimized format (new) or full object format (old)
+              let build: SavedBuild;
+
+              if (buildData.blocks && !buildData.id) {
+                // New optimized format
+                build = {
+                  id: generateId(),
+                  name: buildData.name || 'Imported Build',
+                  blocks: buildData.blocks.map((block: { position: { x: number; y: number; z: number }; type: BlockType; color: string }) => ({
+                    id: generateId(),
+                    position: new Vector3(block.position.x, block.position.y, block.position.z),
+                    type: block.type,
+                    color: block.color,
+                  })),
+                  createdAt: Date.now(),
+                  updatedAt: Date.now(),
+                };
+              } else {
+                // Old format - complete SavedBuild object
+                build = buildData as SavedBuild;
+                build.blocks = convertBlocksToVector3(build.blocks);
+                build.id = generateId();
+                build.createdAt = Date.now();
+                build.updatedAt = Date.now();
+              }
+
               state.savedBuilds.push(build);
             } catch (error) {
               console.error('Failed to import build:', error);

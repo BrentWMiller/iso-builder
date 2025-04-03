@@ -1,11 +1,11 @@
-import { useState, ChangeEvent, useCallback, memo } from 'react';
+import { useState, ChangeEvent, useCallback, memo, useEffect } from 'react';
 import { useGameStore } from '../../store/gameState';
 import { SavedBuild } from '../../store/types';
 import { Button } from './button';
 import { Input } from './input';
 import { Textarea } from './textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './dropdown-menu';
-import { Menu, Save, Upload, Download, Copy, Trash2, X, Eraser } from 'lucide-react';
+import { Menu, Save, Upload, Download, Copy, Trash2, X, Eraser, Link } from 'lucide-react';
 
 // Memoized build item component to prevent unnecessary re-renders
 const BuildItem = memo(
@@ -14,11 +14,13 @@ const BuildItem = memo(
     onLoad,
     onCopy,
     onDelete,
+    onShareUrl,
   }: {
     build: SavedBuild;
     onLoad: (id: string) => void;
     onCopy: (id: string) => void;
     onDelete: (id: string) => void;
+    onShareUrl: (id: string) => void;
   }) => {
     const formatDate = (timestamp: number) => {
       return new Date(timestamp).toLocaleString();
@@ -59,6 +61,13 @@ const BuildItem = memo(
               Copy Build Data
             </DropdownMenuItem>
             <DropdownMenuItem
+              onClick={() => onShareUrl(build.id)}
+              className='text-neutral-900 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer'
+            >
+              <Link className='h-4 w-4 mr-2' />
+              Share URL
+            </DropdownMenuItem>
+            <DropdownMenuItem
               onClick={() => onDelete(build.id)}
               className='text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer'
             >
@@ -88,6 +97,33 @@ const BuildManager = memo(function BuildManager() {
   const [newBuildName, setNewBuildName] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [importData, setImportData] = useState('');
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
+
+  // Check for build data in URL parameters on page load
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const buildData = params.get('build');
+
+    if (buildData) {
+      try {
+        importBuild(buildData);
+
+        // Show success message
+        setImportSuccess('Build imported successfully from URL!');
+
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          setImportSuccess(null);
+        }, 5000);
+
+        // Remove the build parameter from the URL without refreshing the page
+        const newUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, document.title, newUrl);
+      } catch (error) {
+        console.error('Failed to import build from URL:', error);
+      }
+    }
+  }, [importBuild]);
 
   const handleSave = useCallback(() => {
     if (newBuildName.trim()) {
@@ -134,6 +170,15 @@ const BuildManager = memo(function BuildManager() {
     [exportBuild]
   );
 
+  const handleShareUrl = useCallback(
+    (id: string) => {
+      const data = exportBuild(id);
+      const url = `${window.location.origin}${window.location.pathname}?build=${encodeURIComponent(data)}`;
+      navigator.clipboard.writeText(url);
+    },
+    [exportBuild]
+  );
+
   const handleClearCanvas = useCallback(() => {
     clearBlocks();
     setIsConfirmingClear(false);
@@ -170,6 +215,12 @@ const BuildManager = memo(function BuildManager() {
         <span>Builds</span>
       </Button>
 
+      {importSuccess && (
+        <div className='bg-green-100/90 dark:bg-green-900/90 text-green-800 dark:text-green-200 p-2 rounded-xl text-sm border border-green-200 dark:border-green-800 backdrop-blur-md transition-all'>
+          {importSuccess}
+        </div>
+      )}
+
       {isOpen && (
         <div className='bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-md p-4 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 max-w-sm max-h-[calc(100vh-8rem)] overflow-y-auto'>
           <div className='flex flex-col gap-4'>
@@ -196,7 +247,7 @@ const BuildManager = memo(function BuildManager() {
 
             <div className='flex flex-col gap-2 max-h-96 overflow-y-auto'>
               {savedBuilds.map((build: SavedBuild) => (
-                <BuildItem key={build.id} build={build} onLoad={loadBuild} onCopy={handleCopy} onDelete={deleteBuild} />
+                <BuildItem key={build.id} build={build} onLoad={loadBuild} onCopy={handleCopy} onDelete={deleteBuild} onShareUrl={handleShareUrl} />
               ))}
             </div>
 
