@@ -3,9 +3,11 @@ import { Mesh, Vector3 } from 'three';
 import { useGameStore } from '../../store/gameState';
 import { GRID_SIZE } from '../../constants';
 import { Grid as DreiGrid } from '@react-three/drei';
+import { useDragDetection } from '../../hooks/useDragDetection';
 
 export default function Grid() {
   const ref = useRef<Mesh>(null);
+  const { isDragging, handlePointerDown, handlePointerMove, handlePointerUp } = useDragDetection();
   const addBlock = useGameStore((state) => state.addBlock);
   const blocks = useGameStore((state) => state.blocks);
   const selectedBlockType = useGameStore((state) => state.selectedBlockType);
@@ -35,6 +37,9 @@ export default function Grid() {
 
   const handleClick = (event: { point: Vector3; stopPropagation: () => void; face?: { normal: Vector3 } }) => {
     event.stopPropagation();
+
+    // Don't add blocks if we were dragging
+    if (isDragging) return;
 
     // Get grid coordinates
     const gridX = Math.floor(event.point.x) + 0.5;
@@ -72,7 +77,16 @@ export default function Grid() {
   return (
     <group>
       {/* Main grid plane */}
-      <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]} position={[GRID_SIZE / 2, -0.5, GRID_SIZE / 2]} onClick={handleClick} receiveShadow>
+      <mesh
+        ref={ref}
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[GRID_SIZE / 2, -0.5, GRID_SIZE / 2]}
+        onClick={handleClick}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        receiveShadow
+      >
         <planeGeometry args={[GRID_SIZE, GRID_SIZE]} />
         <meshStandardMaterial color='#2a2a2a' transparent={true} opacity={0.6} roughness={0.9} metalness={0.1} />
       </mesh>

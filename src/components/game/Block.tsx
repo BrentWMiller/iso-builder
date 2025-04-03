@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { Mesh, Vector3 } from 'three';
 import { useGameStore } from '../../store/gameState';
+import { useDragDetection } from '../../hooks/useDragDetection';
 
 interface BlockProps {
   position: Vector3;
@@ -10,6 +11,7 @@ interface BlockProps {
 
 export default function Block({ position, color, id }: BlockProps) {
   const ref = useRef<Mesh>(null);
+  const { isDragging, handlePointerDown, handlePointerMove, handlePointerUp } = useDragDetection();
   const addBlock = useGameStore((state) => state.addBlock);
   const removeBlock = useGameStore((state) => state.removeBlock);
   const blocks = useGameStore((state) => state.blocks);
@@ -24,6 +26,9 @@ export default function Block({ position, color, id }: BlockProps) {
 
   const handleClick = (event: { stopPropagation: () => void; face?: { normal: Vector3 }; button?: number }) => {
     event.stopPropagation();
+
+    // Don't add/remove blocks if we were dragging
+    if (isDragging) return;
 
     // Right click to remove block
     if (event.button === 2) {
@@ -50,7 +55,17 @@ export default function Block({ position, color, id }: BlockProps) {
   };
 
   return (
-    <mesh ref={ref} position={position} onClick={handleClick} onContextMenu={handleClick} castShadow receiveShadow>
+    <mesh
+      ref={ref}
+      position={position}
+      onClick={handleClick}
+      onContextMenu={handleClick}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      castShadow
+      receiveShadow
+    >
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color={color} roughness={0.1} metalness={0.1} />
     </mesh>
