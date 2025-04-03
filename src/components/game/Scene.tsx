@@ -5,7 +5,7 @@ import { GRID_SIZE } from '../../constants';
 import Grid from './Grid';
 import Block from './Block';
 import { Raycaster, Vector2 } from 'three';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import ColorToolbar from '../ui/ColorToolbar';
 import ThemeToggle from '../ui/ThemeToggle';
 import BuildManager from '../ui/BuildManager';
@@ -15,40 +15,62 @@ function SceneContent() {
   const setHoveredBlock = useGameStore((state) => state.setHoveredBlock);
   const setHoveredFace = useGameStore((state) => state.setHoveredFace);
   const { camera, scene } = useThree();
-  const raycaster = new Raycaster();
+
+  // Memoize the raycaster to prevent recreation on each render
+  const raycaster = useMemo(() => new Raycaster(), []);
+  const mouse = useMemo(() => new Vector2(), []);
+
+  // Throttle the pointer move event to reduce unnecessary calculations
+  const handlePointerMove = useCallback(
+    (event: PointerEvent) => {
+      // Throttle to every 50ms (20fps)
+      if (!handlePointerMove.lastCall || Date.now() - handlePointerMove.lastCall > 50) {
+        handlePointerMove.lastCall = Date.now();
+
+        // Calculate mouse position in normalized device coordinates (-1 to +1)
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // Update the picking ray with the camera and mouse position
+        raycaster.setFromCamera(mouse, camera);
+
+        // Find all intersected objects
+        const intersects = raycaster.intersectObjects(scene.children, true);
+
+        // Find the closest block intersection
+        const closestIntersection = intersects.find((intersect) => {
+          const block = blocks.find((b) => b.id === intersect.object.userData.blockId);
+          return block !== undefined;
+        });
+
+        // Update hover state
+        if (closestIntersection) {
+          const blockId = closestIntersection.object.userData.blockId;
+          const faceIndex = closestIntersection.face?.materialIndex ?? null;
+          setHoveredBlock(blockId);
+          setHoveredFace(faceIndex);
+        } else {
+          setHoveredBlock(null);
+          setHoveredFace(null);
+        }
+      }
+    },
+    [blocks, camera, scene, setHoveredBlock, setHoveredFace, raycaster, mouse]
+  );
+
+  // TypeScript fix for the lastCall property
+  (handlePointerMove as any).lastCall = 0;
 
   useEffect(() => {
-    const handlePointerMove = (event: PointerEvent) => {
-      // Calculate mouse position in normalized device coordinates (-1 to +1)
-      const mouse = new Vector2((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
-
-      // Update the picking ray with the camera and mouse position
-      raycaster.setFromCamera(mouse, camera);
-
-      // Find all intersected objects
-      const intersects = raycaster.intersectObjects(scene.children, true);
-
-      // Find the closest block intersection
-      const closestIntersection = intersects.find((intersect) => {
-        const block = blocks.find((b) => b.id === intersect.object.userData.blockId);
-        return block !== undefined;
-      });
-
-      // Update hover state
-      if (closestIntersection) {
-        const blockId = closestIntersection.object.userData.blockId;
-        const faceIndex = closestIntersection.face?.materialIndex ?? null;
-        setHoveredBlock(blockId);
-        setHoveredFace(faceIndex);
-      } else {
-        setHoveredBlock(null);
-        setHoveredFace(null);
-      }
-    };
-
     window.addEventListener('pointermove', handlePointerMove);
     return () => window.removeEventListener('pointermove', handlePointerMove);
-  }, [blocks, camera, scene, setHoveredBlock, setHoveredFace]);
+  }, [handlePointerMove]);
+
+  // Memoize the blocks rendering to prevent unnecessary re-renders
+  const blockElements = useMemo(
+    () => blocks.map((block) => <Block key={block.id} id={block.id} position={block.position} color={block.color} />),
+    [blocks]
+  );
 
   return (
     <>
@@ -88,9 +110,7 @@ function SceneContent() {
 
       <Grid />
 
-      {blocks.map((block) => (
-        <Block key={block.id} id={block.id} position={block.position} color={block.color} />
-      ))}
+      {blockElements}
     </>
   );
 }
@@ -116,6 +136,7 @@ export default function Scene() {
         }}
         shadows
         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+        performance={{ min: 0.5 }}
       >
         <SceneContent />
       </Canvas>

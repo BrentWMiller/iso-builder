@@ -16,6 +16,7 @@ const initialState: GameState = {
   hoveredFaceIndex: null,
   theme: 'dark',
   savedBuilds: [],
+  lastUpdateTimestamp: Date.now(),
 };
 
 interface Vector3Like {
@@ -47,6 +48,10 @@ const convertBlocksToVector3 = (blocks: BlockLike[]): Block[] => {
   }));
 };
 
+// Debounce history updates to reduce storage operations
+let historyUpdateTimeout: ReturnType<typeof setTimeout> | null = null;
+const HISTORY_UPDATE_DELAY = 500; // 500ms debounce
+
 const store = create<GameState & GameActions>()(
   persist(
     (set) => ({
@@ -57,24 +62,52 @@ const store = create<GameState & GameActions>()(
           produce((state: GameState) => {
             const newBlock = { ...block, id: generateId() };
             state.blocks.push(newBlock);
+            state.lastUpdateTimestamp = Date.now();
 
-            // Update history
-            state.history = state.history.slice(0, state.historyIndex + 1);
-            state.history.push([...state.blocks]);
-            state.historyIndex++;
-          })
+            // Debounce history updates
+            if (historyUpdateTimeout) {
+              clearTimeout(historyUpdateTimeout);
+            }
+
+            historyUpdateTimeout = setTimeout(() => {
+              set(
+                produce((state: GameState) => {
+                  // Update history
+                  state.history = state.history.slice(0, state.historyIndex + 1);
+                  // Create a deep copy of the blocks array for history
+                  state.history.push(JSON.parse(JSON.stringify(state.blocks)));
+                  state.historyIndex++;
+                })
+              );
+            }, HISTORY_UPDATE_DELAY);
+          }),
+          false // Use false for shallow merge to optimize updates
         ),
 
       removeBlock: (id) =>
         set(
           produce((state: GameState) => {
             state.blocks = state.blocks.filter((block) => block.id !== id);
+            state.lastUpdateTimestamp = Date.now();
 
-            // Update history
-            state.history = state.history.slice(0, state.historyIndex + 1);
-            state.history.push([...state.blocks]);
-            state.historyIndex++;
-          })
+            // Debounce history updates
+            if (historyUpdateTimeout) {
+              clearTimeout(historyUpdateTimeout);
+            }
+
+            historyUpdateTimeout = setTimeout(() => {
+              set(
+                produce((state: GameState) => {
+                  // Update history
+                  state.history = state.history.slice(0, state.historyIndex + 1);
+                  // Create a deep copy of the blocks array for history
+                  state.history.push(JSON.parse(JSON.stringify(state.blocks)));
+                  state.historyIndex++;
+                })
+              );
+            }, HISTORY_UPDATE_DELAY);
+          }),
+          false // Use false for shallow merge to optimize updates
         ),
 
       setSelectedBlockType: (type: BlockType) =>
@@ -93,16 +126,14 @@ const store = create<GameState & GameActions>()(
 
       setHoveredBlock: (id: string | null) =>
         set(
-          produce((state: GameState) => {
-            state.hoveredBlockId = id;
-          })
+          { hoveredBlockId: id },
+          false // Use false for shallow merge to optimize updates
         ),
 
       setHoveredFace: (index: number | null) =>
         set(
-          produce((state: GameState) => {
-            state.hoveredFaceIndex = index;
-          })
+          { hoveredFaceIndex: index },
+          false // Use false for shallow merge to optimize updates
         ),
 
       toggleTheme: () =>
@@ -119,7 +150,8 @@ const store = create<GameState & GameActions>()(
               state.historyIndex--;
               const historyItem = state.history[state.historyIndex];
               if (historyItem) {
-                state.blocks = [...historyItem];
+                state.blocks = convertBlocksToVector3(JSON.parse(JSON.stringify(historyItem)));
+                state.lastUpdateTimestamp = Date.now();
               }
             }
           })
@@ -132,7 +164,8 @@ const store = create<GameState & GameActions>()(
               state.historyIndex++;
               const historyItem = state.history[state.historyIndex];
               if (historyItem) {
-                state.blocks = [...historyItem];
+                state.blocks = convertBlocksToVector3(JSON.parse(JSON.stringify(historyItem)));
+                state.lastUpdateTimestamp = Date.now();
               }
             }
           })
@@ -144,7 +177,7 @@ const store = create<GameState & GameActions>()(
             const newBuild: SavedBuild = {
               id: generateId(),
               name,
-              blocks: [...state.blocks],
+              blocks: JSON.parse(JSON.stringify(state.blocks)), // Deep copy to prevent reference issues
               createdAt: Date.now(),
               updatedAt: Date.now(),
             };
@@ -157,9 +190,10 @@ const store = create<GameState & GameActions>()(
           produce((state: GameState) => {
             const build = state.savedBuilds.find((b) => b.id === id);
             if (build) {
-              state.blocks = convertBlocksToVector3(build.blocks);
+              state.blocks = convertBlocksToVector3(JSON.parse(JSON.stringify(build.blocks)));
               state.history = [[...state.blocks]];
               state.historyIndex = 0;
+              state.lastUpdateTimestamp = Date.now();
             }
           })
         ),
@@ -199,6 +233,7 @@ const store = create<GameState & GameActions>()(
         set(
           produce((state: GameState) => {
             state.blocks = [];
+            state.lastUpdateTimestamp = Date.now();
 
             // Update history
             state.history = state.history.slice(0, state.historyIndex + 1);
@@ -235,3 +270,17 @@ const store = create<GameState & GameActions>()(
 );
 
 export const useGameStore = store;
+
+// Custom selector hooks for better performance
+export const useBlocks = () => {
+  return useGameStore((state) => state.blocks);
+};
+
+export const useTheme = () => useGameStore((state) => state.theme);
+
+export const useHoveredState = () => {
+  return useGameStore((state) => ({
+    hoveredBlockId: state.hoveredBlockId,
+    hoveredFaceIndex: state.hoveredFaceIndex,
+  }));
+};

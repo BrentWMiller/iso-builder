@@ -27,6 +27,7 @@ export interface GameState {
   hoveredFaceIndex: number | null;
   theme: 'light' | 'dark';
   savedBuilds: SavedBuild[];
+  lastUpdateTimestamp: number;
 }
 
 export interface GameActions {

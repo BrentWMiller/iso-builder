@@ -1,14 +1,24 @@
 import { GRID_SIZE } from '../../constants';
 import { Grid as DreiGrid } from '@react-three/drei';
 import SoftCirclePlane from './SoftCirclePlane';
-import { useGameStore } from '../../store/gameState';
+import { memo, useMemo } from 'react';
+import { useTheme } from '../../store/gameState';
 
-export default function Grid() {
-  const theme = useGameStore((state) => state.theme);
+const Grid = memo(function Grid() {
+  const theme = useTheme();
 
-  const gridColor = theme === 'dark' ? '#2a2a2a' : '#e5e5e5';
-  const cellColor = theme === 'dark' ? '#000000' : '#cccccc';
-  const sectionColor = theme === 'dark' ? '#444444' : '#999999';
+  // Memoize the grid colors to prevent unnecessary calculations
+  const { gridColor, cellColor, sectionColor } = useMemo(
+    () => ({
+      gridColor: theme === 'dark' ? '#2a2a2a' : '#e5e5e5',
+      cellColor: theme === 'dark' ? '#000000' : '#cccccc',
+      sectionColor: theme === 'dark' ? '#444444' : '#999999',
+    }),
+    [theme]
+  );
+
+  // Memoize the grid position as a tuple with specific length
+  const gridPosition = useMemo(() => [GRID_SIZE / 2, -0.49, GRID_SIZE / 2] as [number, number, number], []);
 
   return (
     <group>
@@ -27,8 +37,12 @@ export default function Grid() {
         fadeDistance={30}
         fadeStrength={1}
         followCamera={false}
-        position={[GRID_SIZE / 2, -0.49, GRID_SIZE / 2]}
+        position={gridPosition}
       />
     </group>
   );
-}
+});
+
+Grid.displayName = 'Grid';
+
+export default Grid;
