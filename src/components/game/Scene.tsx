@@ -50,7 +50,7 @@ function SceneContent() {
 
   return (
     <>
-      <SoftShadows size={25} focus={0} samples={10} />
+      <SoftShadows size={10} focus={0.25} samples={10} />
 
       {/* Ambient light for base illumination */}
       <ambientLight intensity={0.6} />
