@@ -28,6 +28,7 @@ export interface GameState {
   theme: 'light' | 'dark';
   savedBuilds: SavedBuild[];
   lastUpdateTimestamp: number;
+  pendingHoverUpdates: boolean;
 }
 
 export interface GameActions {

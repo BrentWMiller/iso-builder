@@ -39,6 +39,7 @@ vi.mock('lucide-react', () => ({
   Copy: () => <div data-testid='copy-icon' />,
   Trash2: () => <div data-testid='trash-icon' />,
   X: () => <div data-testid='x-icon' />,
+  Eraser: () => <div data-testid='eraser-icon' />,
 }));
 
 // Mock the game store

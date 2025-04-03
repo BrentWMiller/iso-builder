@@ -56,8 +56,12 @@ const mockWebGLContext = {
 
 // Mock canvas getContext
 const getContextProxy = new Proxy(HTMLCanvasElement.prototype.getContext, {
-  apply(target, thisArg, args: [string, any?]) {
-    const [contextId] = args;
+  apply(
+    target: typeof HTMLCanvasElement.prototype.getContext,
+    thisArg: HTMLCanvasElement,
+    args: Parameters<typeof HTMLCanvasElement.prototype.getContext>
+  ) {
+    const contextId = args[0];
     if (contextId === 'webgl' || contextId === 'webgl2') {
       return mockWebGLContext;
     }
@@ -66,6 +70,34 @@ const getContextProxy = new Proxy(HTMLCanvasElement.prototype.getContext, {
 });
 
 HTMLCanvasElement.prototype.getContext = getContextProxy;
+
+// Mock lucide-react icons
+vi.mock('lucide-react', () => {
+  // Create a mock icon component factory
+  const createMockIcon = (name: string) => {
+    const MockIcon = ({ className, ...props }: { className?: string }) => {
+      return React.createElement('svg', {
+        'data-testid': `mock-icon-${name}`,
+        className,
+        ...props,
+      });
+    };
+    MockIcon.displayName = name;
+    return MockIcon;
+  };
+
+  // Return mock icons used in the app
+  return {
+    Menu: createMockIcon('Menu'),
+    Save: createMockIcon('Save'),
+    Upload: createMockIcon('Upload'),
+    Download: createMockIcon('Download'),
+    Copy: createMockIcon('Copy'),
+    Trash2: createMockIcon('Trash2'),
+    X: createMockIcon('X'),
+    Eraser: createMockIcon('Eraser'),
+  };
+});
 
 // Mock framer-motion
 vi.mock('framer-motion', async () => {

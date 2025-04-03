@@ -5,7 +5,7 @@ import { GRID_SIZE } from '../../constants';
 import Grid from './Grid';
 import Block from './Block';
 import { Raycaster, Vector2 } from 'three';
-import { useEffect, useMemo, useCallback } from 'react';
+import { useEffect, useMemo, useCallback, useRef } from 'react';
 import ColorToolbar from '../ui/ColorToolbar';
 import ThemeToggle from '../ui/ThemeToggle';
 import BuildManager from '../ui/BuildManager';
@@ -20,12 +20,16 @@ function SceneContent() {
   const raycaster = useMemo(() => new Raycaster(), []);
   const mouse = useMemo(() => new Vector2(), []);
 
+  // Use ref for throttling instead of function property
+  const lastCallTimeRef = useRef<number>(0);
+
   // Throttle the pointer move event to reduce unnecessary calculations
   const handlePointerMove = useCallback(
     (event: PointerEvent) => {
       // Throttle to every 50ms (20fps)
-      if (!handlePointerMove.lastCall || Date.now() - handlePointerMove.lastCall > 50) {
-        handlePointerMove.lastCall = Date.now();
+      const now = Date.now();
+      if (now - lastCallTimeRef.current > 50) {
+        lastCallTimeRef.current = now;
 
         // Calculate mouse position in normalized device coordinates (-1 to +1)
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -57,9 +61,6 @@ function SceneContent() {
     },
     [blocks, camera, scene, setHoveredBlock, setHoveredFace, raycaster, mouse]
   );
-
-  // TypeScript fix for the lastCall property
-  (handlePointerMove as any).lastCall = 0;
 
   useEffect(() => {
     window.addEventListener('pointermove', handlePointerMove);

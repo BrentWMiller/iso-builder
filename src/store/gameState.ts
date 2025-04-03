@@ -17,6 +17,7 @@ const initialState: GameState = {
   theme: 'dark',
   savedBuilds: [],
   lastUpdateTimestamp: Date.now(),
+  pendingHoverUpdates: false,
 };
 
 interface Vector3Like {
@@ -52,9 +53,13 @@ const convertBlocksToVector3 = (blocks: BlockLike[]): Block[] => {
 let historyUpdateTimeout: ReturnType<typeof setTimeout> | null = null;
 const HISTORY_UPDATE_DELAY = 500; // 500ms debounce
 
+// Throttle hover updates to reduce excessive state changes and re-renders
+let hoverUpdateTimeout: ReturnType<typeof setTimeout> | null = null;
+const HOVER_UPDATE_DELAY = 30; // 30ms throttle (about 33fps)
+
 const store = create<GameState & GameActions>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...initialState,
 
       addBlock: (block) =>
@@ -124,17 +129,42 @@ const store = create<GameState & GameActions>()(
           })
         ),
 
-      setHoveredBlock: (id: string | null) =>
-        set(
-          { hoveredBlockId: id },
-          false // Use false for shallow merge to optimize updates
-        ),
+      // Throttled hover update function
+      setHoveredBlock: (id: string | null) => {
+        const state = get();
 
-      setHoveredFace: (index: number | null) =>
-        set(
-          { hoveredFaceIndex: index },
-          false // Use false for shallow merge to optimize updates
-        ),
+        if (state.hoveredBlockId === id) {
+          return; // Skip if no change
+        }
+
+        // If we already have a pending update, just store the new target ID
+        if (state.pendingHoverUpdates) {
+          set({ hoveredBlockId: id }, false);
+          return;
+        }
+
+        // Set pending flag
+        set({ pendingHoverUpdates: true }, false);
+
+        // Throttle rapid hover changes
+        if (hoverUpdateTimeout) {
+          clearTimeout(hoverUpdateTimeout);
+        }
+
+        hoverUpdateTimeout = setTimeout(() => {
+          set({ hoveredBlockId: id, pendingHoverUpdates: false }, false);
+        }, HOVER_UPDATE_DELAY);
+      },
+
+      setHoveredFace: (index: number | null) => {
+        const state = get();
+
+        if (state.hoveredFaceIndex === index) {
+          return; // Skip if no change
+        }
+
+        set({ hoveredFaceIndex: index }, false);
+      },
 
       toggleTheme: () =>
         set(
@@ -206,7 +236,7 @@ const store = create<GameState & GameActions>()(
         ),
 
       exportBuild: (id: string): string => {
-        const state = store.getState();
+        const state = get();
         const build = state.savedBuilds.find((b: SavedBuild) => b.id === id);
         if (!build) return '';
         return btoa(JSON.stringify(build));

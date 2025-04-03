@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useCallback, memo } from 'react';
 import { ShaderMaterial, Color, Vector3 } from 'three';
 import { extend } from '@react-three/fiber';
 import { shaderMaterial } from '@react-three/drei';
@@ -60,7 +60,7 @@ interface SoftCirclePlaneProps {
   opacity?: number;
 }
 
-export default function SoftCirclePlane({ size, color = '#2a2a2a', opacity = 0.6 }: SoftCirclePlaneProps) {
+const SoftCirclePlane = memo(({ size, color = '#2a2a2a', opacity = 0.6 }: SoftCirclePlaneProps) => {
   const materialRef = useRef<ShaderMaterial>(null);
   const { isDragging, handlePointerDown, handlePointerMove, handlePointerUp } = useDragDetection();
   const addBlock = useGameStore((state) => state.addBlock);
@@ -68,71 +68,85 @@ export default function SoftCirclePlane({ size, color = '#2a2a2a', opacity = 0.6
   const selectedBlockType = useGameStore((state) => state.selectedBlockType);
   const selectedColor = useGameStore((state) => state.selectedColor);
 
-  const getBlocksInColumn = (x: number, z: number) => {
-    return blocks
-      .filter((block) => Math.abs(block.position.x - x) < 0.1 && Math.abs(block.position.z - z) < 0.1)
-      .sort((a, b) => a.position.y - b.position.y);
-  };
+  // Memoize helper functions to avoid recreating them on every render
+  const getBlocksInColumn = useCallback(
+    (x: number, z: number) => {
+      return blocks
+        .filter((block) => Math.abs(block.position.x - x) < 0.1 && Math.abs(block.position.z - z) < 0.1)
+        .sort((a, b) => a.position.y - b.position.y);
+    },
+    [blocks]
+  );
 
-  const findLowestEmptyPosition = (x: number, z: number) => {
-    const columnBlocks = getBlocksInColumn(x, z);
-    let y = 0; // Start at ground level
+  const findLowestEmptyPosition = useCallback(
+    (x: number, z: number) => {
+      const columnBlocks = getBlocksInColumn(x, z);
+      let y = 0; // Start at ground level
 
-    // Find the first gap in the stack
-    for (const block of columnBlocks) {
-      if (Math.abs(block.position.y - y) > 0.1) {
-        // Found a gap
-        break;
+      // Find the first gap in the stack
+      for (const block of columnBlocks) {
+        if (Math.abs(block.position.y - y) > 0.1) {
+          // Found a gap
+          break;
+        }
+        y++;
       }
-      y++;
-    }
 
-    return y;
-  };
+      return y;
+    },
+    [getBlocksInColumn]
+  );
 
-  const handleClick = (event: { point: Vector3; stopPropagation: () => void; face?: { normal: Vector3 } }) => {
-    event.stopPropagation();
+  const handleClick = useCallback(
+    (event: { point: Vector3; stopPropagation: () => void; face?: { normal: Vector3 } }) => {
+      event.stopPropagation();
 
-    // Don't add blocks if we were dragging
-    if (isDragging) return;
+      // Don't add blocks if we were dragging
+      if (isDragging) return;
 
-    // Get grid coordinates
-    const gridX = Math.floor(event.point.x) + 0.5;
-    const gridZ = Math.floor(event.point.z) + 0.5;
+      // Get grid coordinates
+      const gridX = Math.floor(event.point.x) + 0.5;
+      const gridZ = Math.floor(event.point.z) + 0.5;
 
-    // If clicking on a block face, place the new block on top of that block
-    if (event.face) {
-      const clickedBlock = blocks.find(
-        (block) =>
-          Math.abs(block.position.x - gridX) < 0.1 && Math.abs(block.position.z - gridZ) < 0.1 && Math.abs(block.position.y - event.point.y) < 0.1
-      );
+      // If clicking on a block face, place the new block on top of that block
+      if (event.face) {
+        const clickedBlock = blocks.find(
+          (block) =>
+            Math.abs(block.position.x - gridX) < 0.1 && Math.abs(block.position.z - gridZ) < 0.1 && Math.abs(block.position.y - event.point.y) < 0.1
+        );
 
-      if (clickedBlock) {
-        const position = new Vector3(gridX, clickedBlock.position.y + 1, gridZ);
-        addBlock({
-          position,
-          type: selectedBlockType,
-          color: selectedColor,
-        });
-        return;
+        if (clickedBlock) {
+          const position = new Vector3(gridX, clickedBlock.position.y + 1, gridZ);
+          addBlock({
+            position,
+            type: selectedBlockType,
+            color: selectedColor,
+          });
+          return;
+        }
       }
-    }
 
-    // Place block at the lowest empty position in the column
-    const y = findLowestEmptyPosition(gridX, gridZ);
-    const position = new Vector3(gridX, y, gridZ);
+      // Place block at the lowest empty position in the column
+      const y = findLowestEmptyPosition(gridX, gridZ);
+      const position = new Vector3(gridX, y, gridZ);
 
-    addBlock({
-      position,
-      type: selectedBlockType,
-      color: selectedColor,
-    });
-  };
+      addBlock({
+        position,
+        type: selectedBlockType,
+        color: selectedColor,
+      });
+    },
+    [isDragging, blocks, addBlock, selectedBlockType, selectedColor, findLowestEmptyPosition]
+  );
+
+  // Create rotation and position only once
+  const rotation: [number, number, number] = [-Math.PI / 2, 0, 0];
+  const position: [number, number, number] = [size / 2, -0.5, size / 2];
 
   return (
     <mesh
-      rotation={[-Math.PI / 2, 0, 0]}
-      position={[size / 2, -0.5, size / 2]}
+      rotation={rotation}
+      position={position}
       onClick={handleClick}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -143,4 +157,8 @@ export default function SoftCirclePlane({ size, color = '#2a2a2a', opacity = 0.6
       <softCircleMaterial ref={materialRef} color={color} opacity={opacity} transparent />
     </mesh>
   );
-}
+});
+
+SoftCirclePlane.displayName = 'SoftCirclePlane';
+
+export default SoftCirclePlane;

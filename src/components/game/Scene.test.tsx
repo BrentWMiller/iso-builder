@@ -7,6 +7,7 @@ import { GameState } from '../../store/types';
 // Mock the useGameStore hook
 vi.mock('../../store/gameState', () => ({
   useGameStore: vi.fn(),
+  useTheme: vi.fn().mockReturnValue('dark'),
 }));
 
 // Mock @react-three/drei components
