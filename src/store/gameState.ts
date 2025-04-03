@@ -117,7 +117,10 @@ const store = create<GameState & GameActions>()(
           produce((state: GameState) => {
             if (state.historyIndex > 0) {
               state.historyIndex--;
-              state.blocks = [...state.history[state.historyIndex]];
+              const historyItem = state.history[state.historyIndex];
+              if (historyItem) {
+                state.blocks = [...historyItem];
+              }
             }
           })
         ),
@@ -127,7 +130,10 @@ const store = create<GameState & GameActions>()(
           produce((state: GameState) => {
             if (state.historyIndex < state.history.length - 1) {
               state.historyIndex++;
-              state.blocks = [...state.history[state.historyIndex]];
+              const historyItem = state.history[state.historyIndex];
+              if (historyItem) {
+                state.blocks = [...historyItem];
+              }
             }
           })
         ),

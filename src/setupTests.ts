@@ -56,7 +56,7 @@ const mockWebGLContext = {
 
 // Mock canvas getContext
 const getContextProxy = new Proxy(HTMLCanvasElement.prototype.getContext, {
-  apply(target, thisArg, args) {
+  apply(target, thisArg, args: [string, any?]) {
     const [contextId] = args;
     if (contextId === 'webgl' || contextId === 'webgl2') {
       return mockWebGLContext;
