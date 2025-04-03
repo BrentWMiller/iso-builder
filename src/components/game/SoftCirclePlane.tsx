@@ -26,12 +26,12 @@ const SoftCircleMaterial = shaderMaterial(
     varying vec2 vUv;
     
     void main() {
-      // Calculate distance from center
+      // Calculate distance from center and scale it to make the circle wider
       vec2 center = vec2(0.5, 0.5);
-      float dist = distance(vUv, center);
+      float dist = distance(vUv, center) * 0.9; // Scale down the distance to make the circle wider
       
-      // Create soft edge using smoothstep
-      float edge = smoothstep(0.5, 0.4, dist);
+      // Create softer edge using smoothstep with wider range
+      float edge = smoothstep(0.5, 0.2, dist);
       
       // Apply color and opacity
       gl_FragColor = vec4(color, opacity * edge);

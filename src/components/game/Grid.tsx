@@ -6,7 +6,7 @@ export default function Grid() {
   return (
     <group>
       {/* Main grid plane */}
-      <SoftCirclePlane size={GRID_SIZE} color='#2a2a2a' opacity={0.6} />
+      <SoftCirclePlane size={GRID_SIZE} color='#2a2a2a' opacity={0.5} />
 
       {/* Grid lines */}
       <DreiGrid
