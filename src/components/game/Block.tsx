@@ -19,9 +19,9 @@ export default function Block({ position, color, onBlockClick }: BlockProps) {
   };
 
   return (
-    <mesh ref={ref} position={position} onClick={handleClick}>
+    <mesh ref={ref} position={position} onClick={handleClick} castShadow receiveShadow>
       <boxGeometry args={[1, 1, 1]} />
-      <meshToonMaterial color={color} />
+      <meshStandardMaterial color={color} roughness={0.1} metalness={0.1} />
     </mesh>
   );
 }
