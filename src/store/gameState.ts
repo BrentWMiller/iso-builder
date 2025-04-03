@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { produce } from 'immer';
-import { BlockType, GameState, GameActions } from './types';
+import { BlockType, GameState, GameActions, SavedBuild } from './types';
+import { Vector3 } from 'three';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -13,9 +14,10 @@ const initialState: GameState = {
   hoveredBlockId: null,
   hoveredFaceIndex: null,
   theme: 'dark',
+  savedBuilds: [],
 };
 
-export const useGameStore = create<GameState & GameActions>((set) => ({
+const store = create<GameState & GameActions>((set) => ({
   ...initialState,
 
   addBlock: (block) =>
@@ -97,4 +99,70 @@ export const useGameStore = create<GameState & GameActions>((set) => ({
         }
       })
     ),
+
+  saveBuild: (name: string) =>
+    set(
+      produce((state: GameState) => {
+        const newBuild: SavedBuild = {
+          id: generateId(),
+          name,
+          blocks: [...state.blocks],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        state.savedBuilds.push(newBuild);
+      })
+    ),
+
+  loadBuild: (id: string) =>
+    set(
+      produce((state: GameState) => {
+        const build = state.savedBuilds.find((b) => b.id === id);
+        if (build) {
+          // Create new Vector3 instances for each block's position
+          state.blocks = build.blocks.map((block) => ({
+            ...block,
+            position: new Vector3(block.position.x, block.position.y, block.position.z),
+          }));
+          state.history = [[...state.blocks]];
+          state.historyIndex = 0;
+        }
+      })
+    ),
+
+  deleteBuild: (id: string) =>
+    set(
+      produce((state: GameState) => {
+        state.savedBuilds = state.savedBuilds.filter((build) => build.id !== id);
+      })
+    ),
+
+  exportBuild: (id: string): string => {
+    const state = store.getState();
+    const build = state.savedBuilds.find((b: SavedBuild) => b.id === id);
+    if (!build) return '';
+    return JSON.stringify(build);
+  },
+
+  importBuild: (data: string) =>
+    set(
+      produce((state: GameState) => {
+        try {
+          const build = JSON.parse(data) as SavedBuild;
+          // Create new Vector3 instances for each block's position
+          build.blocks = build.blocks.map((block) => ({
+            ...block,
+            position: new Vector3(block.position.x, block.position.y, block.position.z),
+          }));
+          build.id = generateId();
+          build.createdAt = Date.now();
+          build.updatedAt = Date.now();
+          state.savedBuilds.push(build);
+        } catch (error) {
+          console.error('Failed to import build:', error);
+        }
+      })
+    ),
 }));
+
+export const useGameStore = store;

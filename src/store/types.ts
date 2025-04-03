@@ -9,6 +9,14 @@ export interface Block {
   color: string;
 }
 
+export interface SavedBuild {
+  id: string;
+  name: string;
+  blocks: Block[];
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface GameState {
   blocks: Block[];
   selectedBlockType: BlockType;
@@ -18,6 +26,7 @@ export interface GameState {
   hoveredBlockId: string | null;
   hoveredFaceIndex: number | null;
   theme: 'light' | 'dark';
+  savedBuilds: SavedBuild[];
 }
 
 export interface GameActions {
@@ -30,4 +39,9 @@ export interface GameActions {
   toggleTheme: () => void;
   undo: () => void;
   redo: () => void;
+  saveBuild: (name: string) => void;
+  loadBuild: (id: string) => void;
+  deleteBuild: (id: string) => void;
+  exportBuild: (id: string) => string;
+  importBuild: (data: string) => void;
 }
