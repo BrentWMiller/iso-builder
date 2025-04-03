@@ -60,7 +60,7 @@ export default function Block({ position, color, id, type }: BlockProps) {
     };
   }, [color, id, hoveredBlockId, hoveredFaceIndex, mesh]);
 
-  const handleClick = (event: { stopPropagation: () => void; face?: { normal: Vector3 }; button?: number }) => {
+  const handleClick = (event: { stopPropagation: () => void; face?: { normal: Vector3 }; point?: Vector3; button?: number }) => {
     event.stopPropagation();
 
     // Don't add/remove blocks if we were dragging
@@ -73,10 +73,10 @@ export default function Block({ position, color, id, type }: BlockProps) {
     }
 
     // Left click to add block
-    if (!event.face || !plugin) return;
+    if (!event.face || !event.point || !plugin) return;
 
-    // Calculate new block position using the plugin
-    const newPosition = plugin.getPlacementPosition(position, event.face.normal);
+    // Calculate new block position using the actual click point and face normal
+    const newPosition = plugin.getPlacementPosition(event.point, event.face.normal);
 
     // Check if we can place the block using the plugin
     if (!plugin.canPlace(newPosition, blocks)) return;

@@ -31,7 +31,7 @@ export class StairBlockPlugin extends BaseBlockPlugin {
     if (faceNormal) {
       // Adjust position based on face normal for better stair placement
       if (faceNormal.y > 0) {
-        position.y += 0.5;
+        position.y += 0.25; // Adjust for stair height
       }
     }
     return position;

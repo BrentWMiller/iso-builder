@@ -38,8 +38,9 @@ export abstract class BaseBlockPlugin implements BlockPlugin {
 
   getPlacementPosition(clickPosition: Vector3, faceNormal?: Vector3): Vector3 {
     if (faceNormal) {
+      // Simple direct placement based on face normal
       return new Vector3(clickPosition.x + faceNormal.x, clickPosition.y + faceNormal.y, clickPosition.z + faceNormal.z);
     }
-    return new Vector3(Math.floor(clickPosition.x) + 0.5, Math.floor(clickPosition.y) + 0.5, Math.floor(clickPosition.z) + 0.5);
+    return clickPosition;
   }
 }
