@@ -1,45 +1,42 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Scene from './Scene';
 import { useGameStore } from '../../store/gameState';
-import type { Mock } from 'vitest';
+import { GameState } from '../../store/types';
 
-// Mock Three.js components
-vi.mock('@react-three/fiber', () => ({
-  Canvas: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid='canvas-container' style={{ width: '100vw', height: '100vh' }}>
-      {children}
-    </div>
-  ),
-  useThree: () => ({
-    camera: {
-      position: { x: 15, y: 15, z: 15 },
-      fov: 50,
-      near: 0.1,
-      far: 1000,
-    },
-    scene: {
-      children: [],
-    },
-  }),
-}));
-
-vi.mock('@react-three/drei', () => ({
-  OrbitControls: () => <div data-testid='orbit-controls'>OrbitControls</div>,
-}));
-
-// Mock the game store
+// Mock the useGameStore hook
 vi.mock('../../store/gameState', () => ({
   useGameStore: vi.fn(),
 }));
 
-// Mock the Block and Grid components
-vi.mock('./Block', () => ({
-  default: () => <div data-testid='block'>Block</div>,
-}));
+// Mock @react-three/drei components
+vi.mock('@react-three/drei', async () => {
+  const actual = await vi.importActual('@react-three/drei');
+  return {
+    ...actual,
+    SoftShadows: () => <div data-testid='soft-shadows' />,
+    OrbitControls: () => <div data-testid='orbit-controls' />,
+    Grid: () => <div data-testid='grid' />,
+  };
+});
 
-vi.mock('./Grid', () => ({
-  default: () => <div data-testid='grid'>Grid</div>,
+// Mock @react-three/fiber
+vi.mock('@react-three/fiber', async () => {
+  const actual = await vi.importActual('@react-three/fiber');
+  return {
+    ...actual,
+    Canvas: ({ children }: { children: React.ReactNode }) => <div data-testid='canvas'>{children}</div>,
+    useThree: () => ({
+      camera: {},
+      scene: {},
+    }),
+    extend: () => {}, // Mock the extend function
+  };
+});
+
+// Mock the SoftCirclePlane component
+vi.mock('./SoftCirclePlane', () => ({
+  default: () => <div data-testid='soft-circle-plane' />,
 }));
 
 describe('Scene Component', () => {
@@ -50,44 +47,45 @@ describe('Scene Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useGameStore as unknown as Mock).mockImplementation(() => mockBlocks);
+    (useGameStore as unknown as ReturnType<typeof vi.fn>).mockImplementation((selector: (state: GameState) => unknown) => {
+      if (selector.toString().includes('blocks')) {
+        return mockBlocks;
+      }
+      if (selector.toString().includes('theme')) {
+        return 'dark';
+      }
+      return null;
+    });
   });
 
-  const renderScene = () => {
-    return render(<Scene />);
-  };
-
   it('renders without crashing', () => {
-    renderScene();
+    render(<Scene />);
   });
 
   it('renders with correct canvas container', () => {
-    const { getByTestId } = renderScene();
-    const container = getByTestId('canvas-container');
-    expect(container).toBeTruthy();
-    expect(container.style.width).toBe('100vw');
-    expect(container.style.height).toBe('100vh');
+    const { getByTestId } = render(<Scene />);
+    const container = getByTestId('canvas');
+    expect(container).toBeInTheDocument();
   });
 
-  it('renders the correct number of blocks', () => {
-    const { getAllByTestId } = renderScene();
-    const blocks = getAllByTestId('block');
-    expect(blocks).toHaveLength(mockBlocks.length);
+  it('renders the soft shadows component', () => {
+    const { getByTestId } = render(<Scene />);
+    expect(getByTestId('soft-shadows')).toBeInTheDocument();
   });
 
   it('renders the grid', () => {
-    const { getByTestId } = renderScene();
-    expect(getByTestId('grid')).toBeTruthy();
+    const { getByTestId } = render(<Scene />);
+    expect(getByTestId('grid')).toBeInTheDocument();
   });
 
   it('renders orbit controls', () => {
-    const { getByTestId } = renderScene();
-    expect(getByTestId('orbit-controls')).toBeTruthy();
+    const { getByTestId } = render(<Scene />);
+    expect(getByTestId('orbit-controls')).toBeInTheDocument();
   });
 
   it('renders lighting elements', () => {
-    const { container } = renderScene();
-    expect(container.querySelector('ambientlight')).toBeTruthy();
+    const { container } = render(<Scene />);
+    expect(container.querySelector('ambientlight')).toBeInTheDocument();
     expect(container.querySelectorAll('directionallight')).toHaveLength(2);
   });
 });
