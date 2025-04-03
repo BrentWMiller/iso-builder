@@ -11,6 +11,17 @@ vi.mock('@react-three/fiber', () => ({
       {children}
     </div>
   ),
+  useThree: () => ({
+    camera: {
+      position: { x: 15, y: 15, z: 15 },
+      fov: 50,
+      near: 0.1,
+      far: 1000,
+    },
+    scene: {
+      children: [],
+    },
+  }),
 }));
 
 vi.mock('@react-three/drei', () => ({
