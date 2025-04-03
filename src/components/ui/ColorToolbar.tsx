@@ -2,11 +2,17 @@ import { useGameStore } from '../../store/gameState';
 
 const COLORS = [
   { color: '#ffffff', label: 'White' },
-  { color: '#ff0000', label: 'Red' },
-  { color: '#00ff00', label: 'Green' },
-  { color: '#0000ff', label: 'Blue' },
-  { color: '#ffff00', label: 'Yellow' },
-  { color: '#ff00ff', label: 'Magenta' },
+  { color: '#FF6B6B', label: 'Coral' },
+  { color: '#4ECDC4', label: 'Turquoise' },
+  { color: '#45B7D1', label: 'Sky Blue' },
+  { color: '#96CEB4', label: 'Mint' },
+  { color: '#FFEEAD', label: 'Cream' },
+  { color: '#D4A5A5', label: 'Dusty Rose' },
+  { color: '#9B59B6', label: 'Amethyst' },
+  { color: '#3498DB', label: 'Electric Blue' },
+  { color: '#2ECC71', label: 'Emerald' },
+  { color: '#F1C40F', label: 'Sunflower' },
+  { color: '#E67E22', label: 'Carrot' },
 ];
 
 export default function ColorToolbar() {
