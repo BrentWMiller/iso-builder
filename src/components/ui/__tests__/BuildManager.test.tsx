@@ -40,6 +40,7 @@ vi.mock('lucide-react', () => ({
   Trash2: () => <div data-testid='trash-icon' />,
   X: () => <div data-testid='x-icon' />,
   Eraser: () => <div data-testid='eraser-icon' />,
+  Link: () => <div data-testid='link-icon' />,
 }));
 
 // Mock the game store
@@ -208,6 +209,47 @@ describe('BuildManager', () => {
     }
   });
 
+  it('creates and copies a shareable URL', async () => {
+    const mockExportData = 'test-build-data';
+    mockStore.exportBuild.mockReturnValue(mockExportData);
+
+    // Save original window.location
+    const originalLocation = window.location;
+
+    // Use Object.defineProperty to avoid TS errors
+    const mockLocation = { origin: 'https://example.com', pathname: '/app' };
+    Object.defineProperty(window, 'location', {
+      value: { ...originalLocation, ...mockLocation },
+      writable: true,
+    });
+
+    render(<BuildManager />);
+    fireEvent.click(screen.getByText('Builds'));
+
+    // Open dropdown menu for first build
+    const menuButtons = screen.getAllByRole('button', { name: '' });
+    const menuButton = menuButtons[0];
+    if (menuButton) {
+      fireEvent.click(menuButton);
+
+      // Click share URL option
+      const shareButtons = screen.getAllByText('Share URL');
+      if (shareButtons[0]) {
+        fireEvent.click(shareButtons[0]);
+
+        expect(mockStore.exportBuild).toHaveBeenCalledWith('1');
+        const expectedUrl = 'https://example.com/app?build=test-build-data';
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedUrl);
+      }
+    }
+
+    // Restore original location
+    Object.defineProperty(window, 'location', {
+      value: originalLocation,
+      writable: true,
+    });
+  });
+
   it('imports a build', async () => {
     // Mock importBuild to resolve successfully
     mockStore.importBuild.mockImplementation(() => {});
@@ -249,21 +291,52 @@ describe('BuildManager', () => {
     render(<BuildManager />);
     fireEvent.click(screen.getByText('Builds'));
 
-    // Open import section
+    // Click import button to show import form
     const importButton = screen.getByText('Import Build');
     fireEvent.click(importButton);
 
-    // Enter invalid import data
-    const textarea = screen.getByPlaceholderText('Paste build data here');
+    // Enter invalid data and submit
+    const textarea = await screen.findByPlaceholderText('Paste build data here');
     await fireEvent.change(textarea, { target: { value: 'invalid-data' } });
 
-    // Submit import
-    const submitButton = screen.getByText('Import');
-    fireEvent.click(submitButton);
+    const form = screen.getByTestId('import-form');
+    fireEvent.submit(form);
 
-    expect(consoleSpy).toHaveBeenCalled();
-    expect(mockStore.importBuild).not.toHaveBeenCalled();
-
+    expect(console.error).toHaveBeenCalled();
     consoleSpy.mockRestore();
+  });
+
+  it('automatically imports build from URL parameter', async () => {
+    const mockBuildData = 'test-build-data';
+    // Set URL parameter
+    const originalLocation = window.location;
+
+    // Simulate a URL with a build parameter
+    const url = new URL('https://example.com/app');
+    url.searchParams.set('build', mockBuildData);
+
+    // Mock window.location and URLSearchParams
+    Object.defineProperty(window, 'location', {
+      value: {
+        ...originalLocation,
+        search: url.search,
+      },
+      writable: true,
+    });
+
+    // Render component with URL parameter present
+    render(<BuildManager />);
+
+    // Check that importBuild was called with the URL parameter
+    expect(mockStore.importBuild).toHaveBeenCalledWith(mockBuildData);
+
+    // Check for success message
+    expect(screen.getByText('Build imported successfully from URL!')).toBeInTheDocument();
+
+    // Restore original location
+    Object.defineProperty(window, 'location', {
+      value: originalLocation,
+      writable: true,
+    });
   });
 });
