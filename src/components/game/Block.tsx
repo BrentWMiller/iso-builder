@@ -5,11 +5,13 @@ import { useGameStore } from '../../store/gameState';
 interface BlockProps {
   position: Vector3;
   color: string;
+  id: string;
 }
 
-export default function Block({ position, color }: BlockProps) {
+export default function Block({ position, color, id }: BlockProps) {
   const ref = useRef<Mesh>(null);
   const addBlock = useGameStore((state) => state.addBlock);
+  const removeBlock = useGameStore((state) => state.removeBlock);
   const blocks = useGameStore((state) => state.blocks);
   const selectedBlockType = useGameStore((state) => state.selectedBlockType);
   const selectedColor = useGameStore((state) => state.selectedColor);
@@ -20,9 +22,16 @@ export default function Block({ position, color }: BlockProps) {
     );
   };
 
-  const handleClick = (event: { stopPropagation: () => void; face?: { normal: Vector3 } }) => {
+  const handleClick = (event: { stopPropagation: () => void; face?: { normal: Vector3 }; button?: number }) => {
     event.stopPropagation();
 
+    // Right click to remove block
+    if (event.button === 2) {
+      removeBlock(id);
+      return;
+    }
+
+    // Left click to add block
     if (!event.face) return;
 
     // Calculate new block position based on face normal
@@ -41,7 +50,7 @@ export default function Block({ position, color }: BlockProps) {
   };
 
   return (
-    <mesh ref={ref} position={position} onClick={handleClick} castShadow receiveShadow>
+    <mesh ref={ref} position={position} onClick={handleClick} onContextMenu={handleClick} castShadow receiveShadow>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color={color} roughness={0.1} metalness={0.1} />
     </mesh>

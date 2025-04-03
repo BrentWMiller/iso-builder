@@ -49,7 +49,7 @@ export default function Scene() {
       <Grid />
 
       {blocks.map((block) => (
-        <Block key={block.id} position={block.position} color={block.color} />
+        <Block key={block.id} id={block.id} position={block.position} color={block.color} />
       ))}
     </Canvas>
   );
