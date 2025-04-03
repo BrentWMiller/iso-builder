@@ -33,7 +33,7 @@ describe('ColorToolbar', () => {
 
     // Check if all color buttons are rendered
     const buttons = screen.getAllByRole('button');
-    expect(buttons).toHaveLength(6); // We have 6 colors
+    expect(buttons).toHaveLength(12); // We have 12 colors
   });
 
   it('displays the correct colors', () => {
@@ -41,25 +41,25 @@ describe('ColorToolbar', () => {
 
     // Check if each color is present
     const whiteButton = screen.getByLabelText('Select White color');
-    const redButton = screen.getByLabelText('Select Red color');
-    const greenButton = screen.getByLabelText('Select Green color');
-    const blueButton = screen.getByLabelText('Select Blue color');
-    const yellowButton = screen.getByLabelText('Select Yellow color');
-    const magentaButton = screen.getByLabelText('Select Magenta color');
+    const coralButton = screen.getByLabelText('Select Coral color');
+    const turquoiseButton = screen.getByLabelText('Select Turquoise color');
+    const skyBlueButton = screen.getByLabelText('Select Sky Blue color');
+    const mintButton = screen.getByLabelText('Select Mint color');
+    const creamButton = screen.getByLabelText('Select Cream color');
 
     expect(whiteButton).toHaveStyle({ backgroundColor: '#ffffff' });
-    expect(redButton).toHaveStyle({ backgroundColor: '#ff0000' });
-    expect(greenButton).toHaveStyle({ backgroundColor: '#00ff00' });
-    expect(blueButton).toHaveStyle({ backgroundColor: '#0000ff' });
-    expect(yellowButton).toHaveStyle({ backgroundColor: '#ffff00' });
-    expect(magentaButton).toHaveStyle({ backgroundColor: '#ff00ff' });
+    expect(coralButton).toHaveStyle({ backgroundColor: '#FF6B6B' });
+    expect(turquoiseButton).toHaveStyle({ backgroundColor: '#4ECDC4' });
+    expect(skyBlueButton).toHaveStyle({ backgroundColor: '#45B7D1' });
+    expect(mintButton).toHaveStyle({ backgroundColor: '#96CEB4' });
+    expect(creamButton).toHaveStyle({ backgroundColor: '#FFEEAD' });
   });
 
   it('highlights the selected color', () => {
-    // Mock the selected color as red
+    // Mock the selected color as coral
     (useGameStore as unknown as ReturnType<typeof vi.fn>).mockImplementation((selector: (state: GameState) => unknown) => {
       if (selector.toString().includes('selectedColor')) {
-        return '#ff0000'; // Selected color is red
+        return '#FF6B6B'; // Selected color is coral
       }
       if (selector.toString().includes('setSelectedColor')) {
         return mockSetSelectedColor;
@@ -69,10 +69,10 @@ describe('ColorToolbar', () => {
 
     render(<ColorToolbar />);
 
-    // Check if the red button has the selected styling
-    const redButton = screen.getByLabelText('Select Red color');
-    expect(redButton).toHaveClass('ring-2');
-    expect(redButton).toHaveClass('scale-105');
+    // Check if the coral button has the selected styling
+    const coralButton = screen.getByLabelText('Select Coral color');
+    expect(coralButton).toHaveClass('ring-2');
+    expect(coralButton).toHaveClass('scale-105');
 
     // Check if other buttons don't have the selected styling
     const whiteButton = screen.getByLabelText('Select White color');
@@ -83,12 +83,12 @@ describe('ColorToolbar', () => {
   it('calls setSelectedColor when a color button is clicked', () => {
     render(<ColorToolbar />);
 
-    // Click on the blue button
-    const blueButton = screen.getByLabelText('Select Blue color');
-    fireEvent.click(blueButton);
+    // Click on the turquoise button
+    const turquoiseButton = screen.getByLabelText('Select Turquoise color');
+    fireEvent.click(turquoiseButton);
 
     // Check if setSelectedColor was called with the correct color
-    expect(mockSetSelectedColor).toHaveBeenCalledWith('#0000ff');
+    expect(mockSetSelectedColor).toHaveBeenCalledWith('#4ECDC4');
   });
 
   it('has the correct accessibility attributes', () => {
@@ -96,10 +96,10 @@ describe('ColorToolbar', () => {
 
     // Check if each button has the correct aria-label
     expect(screen.getByLabelText('Select White color')).toBeInTheDocument();
-    expect(screen.getByLabelText('Select Red color')).toBeInTheDocument();
-    expect(screen.getByLabelText('Select Green color')).toBeInTheDocument();
-    expect(screen.getByLabelText('Select Blue color')).toBeInTheDocument();
-    expect(screen.getByLabelText('Select Yellow color')).toBeInTheDocument();
-    expect(screen.getByLabelText('Select Magenta color')).toBeInTheDocument();
+    expect(screen.getByLabelText('Select Coral color')).toBeInTheDocument();
+    expect(screen.getByLabelText('Select Turquoise color')).toBeInTheDocument();
+    expect(screen.getByLabelText('Select Sky Blue color')).toBeInTheDocument();
+    expect(screen.getByLabelText('Select Mint color')).toBeInTheDocument();
+    expect(screen.getByLabelText('Select Cream color')).toBeInTheDocument();
   });
 });

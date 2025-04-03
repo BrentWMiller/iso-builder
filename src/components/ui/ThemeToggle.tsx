@@ -11,7 +11,7 @@ export default function ThemeToggle() {
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
     >
       {theme === 'dark' ? (
-        <svg xmlns='http://www.w3.org/2000/svg' className='h-6 w-6' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+        <svg data-testid='sun-icon' xmlns='http://www.w3.org/2000/svg' className='h-6 w-6' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
           <path
             strokeLinecap='round'
             strokeLinejoin='round'
@@ -20,7 +20,7 @@ export default function ThemeToggle() {
           />
         </svg>
       ) : (
-        <svg xmlns='http://www.w3.org/2000/svg' className='h-6 w-6' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+        <svg data-testid='moon-icon' xmlns='http://www.w3.org/2000/svg' className='h-6 w-6' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
           <path
             strokeLinecap='round'
             strokeLinejoin='round'
