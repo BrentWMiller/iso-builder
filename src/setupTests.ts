@@ -96,6 +96,7 @@ vi.mock('lucide-react', () => {
     Trash2: createMockIcon('Trash2'),
     X: createMockIcon('X'),
     Eraser: createMockIcon('Eraser'),
+    Link: createMockIcon('Link'),
   };
 });
 
