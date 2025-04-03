@@ -5,16 +5,18 @@ import { Button } from './button';
 import { Input } from './input';
 import { Textarea } from './textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './dropdown-menu';
-import { Menu, Save, Upload, Download, Copy, Trash2, X } from 'lucide-react';
+import { Menu, Save, Upload, Download, Copy, Trash2, X, Eraser } from 'lucide-react';
 
 export default function BuildManager() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isConfirmingClear, setIsConfirmingClear] = useState(false);
   const savedBuilds = useGameStore((state) => state.savedBuilds);
   const saveBuild = useGameStore((state) => state.saveBuild);
   const loadBuild = useGameStore((state) => state.loadBuild);
   const deleteBuild = useGameStore((state) => state.deleteBuild);
   const exportBuild = useGameStore((state) => state.exportBuild);
   const importBuild = useGameStore((state) => state.importBuild);
+  const clearBlocks = useGameStore((state) => state.clearBlocks);
 
   const [newBuildName, setNewBuildName] = useState('');
   const [isImporting, setIsImporting] = useState(false);
@@ -57,6 +59,11 @@ export default function BuildManager() {
   const handleCopy = (id: string) => {
     const data = exportBuild(id);
     navigator.clipboard.writeText(data);
+  };
+
+  const handleClearCanvas = () => {
+    clearBlocks();
+    setIsConfirmingClear(false);
   };
 
   const formatDate = (timestamp: number) => {
@@ -147,23 +154,57 @@ export default function BuildManager() {
             </div>
 
             <div className='flex flex-col gap-2'>
-              <Button
-                onClick={() => setIsImporting(!isImporting)}
-                variant='secondary'
-                className='bg-neutral-200/80 dark:bg-neutral-800/80 hover:bg-neutral-300/80 dark:hover:bg-neutral-700/80'
-              >
-                {isImporting ? (
-                  <>
-                    <X className='h-4 w-4 mr-2' />
-                    Cancel Import
-                  </>
-                ) : (
-                  <>
-                    <Upload className='h-4 w-4 mr-2' />
-                    Import Build
-                  </>
-                )}
-              </Button>
+              <div className='flex gap-2'>
+                <Button
+                  onClick={() => setIsImporting(!isImporting)}
+                  variant='secondary'
+                  className='flex-1 bg-neutral-200/80 dark:bg-neutral-800/80 hover:bg-neutral-300/80 dark:hover:bg-neutral-700/80'
+                >
+                  {isImporting ? (
+                    <>
+                      <X className='h-4 w-4 mr-2' />
+                      Cancel Import
+                    </>
+                  ) : (
+                    <>
+                      <Upload className='h-4 w-4 mr-2' />
+                      Import Build
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  onClick={() => setIsConfirmingClear(true)}
+                  variant='secondary'
+                  className='bg-red-100/80 dark:bg-red-900/30 hover:bg-red-200/80 dark:hover:bg-red-800/30 text-red-600 dark:text-red-400'
+                >
+                  <Eraser className='h-4 w-4 mr-2' />
+                  Clear Canvas
+                </Button>
+              </div>
+
+              {isConfirmingClear && (
+                <div className='mt-2 p-2 border border-red-200 dark:border-red-800 bg-red-50/80 dark:bg-red-950/30 rounded-md flex flex-col gap-1'>
+                  <div className='flex items-center text-red-600 dark:text-red-400 mb-1'>
+                    <X className='h-4 w-4 mr-1 stroke-2' />
+                    <span className='text-xs font-medium'>Clear all blocks?</span>
+                  </div>
+                  <div className='flex gap-1'>
+                    <Button onClick={handleClearCanvas} variant='destructive' size='sm' className='bg-red-500 hover:bg-red-600 text-xs h-7 px-2 py-0'>
+                      Clear All
+                    </Button>
+                    <Button
+                      onClick={() => setIsConfirmingClear(false)}
+                      variant='outline'
+                      size='sm'
+                      className='border-red-200 dark:border-red-800 text-xs h-7 px-2 py-0'
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {isImporting && (
                 <form onSubmit={handleImport} data-testid='import-form'>
                   <Textarea

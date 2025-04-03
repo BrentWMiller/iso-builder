@@ -44,4 +44,5 @@ export interface GameActions {
   deleteBuild: (id: string) => void;
   exportBuild: (id: string) => string;
   importBuild: (data: string) => void;
+  clearBlocks: () => void;
 }

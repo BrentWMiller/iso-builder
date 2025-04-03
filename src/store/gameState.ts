@@ -194,6 +194,18 @@ const store = create<GameState & GameActions>()(
             }
           })
         ),
+
+      clearBlocks: () =>
+        set(
+          produce((state: GameState) => {
+            state.blocks = [];
+
+            // Update history
+            state.history = state.history.slice(0, state.historyIndex + 1);
+            state.history.push([]);
+            state.historyIndex++;
+          })
+        ),
     }),
     {
       name: 'iso-builder-storage',
