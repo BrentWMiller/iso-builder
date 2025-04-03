@@ -1,7 +1,8 @@
-import { useRef } from 'react';
-import { Mesh, Vector3 } from 'three';
+import { useRef, useState, useEffect } from 'react';
+import { Mesh, Vector3, MeshStandardMaterial } from 'three';
 import { useGameStore } from '../../store/gameState';
 import { useDragDetection } from '../../hooks/useDragDetection';
+import { ThreeEvent, useThree } from '@react-three/fiber';
 
 interface BlockProps {
   position: Vector3;
@@ -11,12 +12,42 @@ interface BlockProps {
 
 export default function Block({ position, color, id }: BlockProps) {
   const ref = useRef<Mesh>(null);
-  const { isDragging, handlePointerDown, handlePointerMove, handlePointerUp } = useDragDetection();
+  const [hoveredFace, setHoveredFace] = useState<number | null>(null);
+  const { isDragging, handlePointerDown, handlePointerMove: handleDragMove, handlePointerUp } = useDragDetection();
   const addBlock = useGameStore((state) => state.addBlock);
   const removeBlock = useGameStore((state) => state.removeBlock);
   const blocks = useGameStore((state) => state.blocks);
   const selectedBlockType = useGameStore((state) => state.selectedBlockType);
   const selectedColor = useGameStore((state) => state.selectedColor);
+  const { scene } = useThree();
+
+  // Create materials for each face
+  const materials = [
+    new MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.1 }), // right
+    new MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.1 }), // left
+    new MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.1 }), // top
+    new MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.1 }), // bottom
+    new MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.1 }), // front
+    new MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.1 }), // back
+  ];
+
+  // Update material colors based on hover state
+  useEffect(() => {
+    materials.forEach((material, index) => {
+      if (hoveredFace === index) {
+        material.color.setHex(0xadd8e6); // Light blue highlight
+      } else {
+        material.color.setStyle(color);
+      }
+    });
+
+    // Cleanup function to reset materials when component unmounts
+    return () => {
+      materials.forEach((material) => {
+        material.color.setStyle(color);
+      });
+    };
+  }, [hoveredFace, color]);
 
   const isBlockAtPosition = (pos: Vector3) => {
     return blocks.some(
@@ -54,6 +85,31 @@ export default function Block({ position, color, id }: BlockProps) {
     });
   };
 
+  const handlePointerOver = (event: ThreeEvent<PointerEvent>) => {
+    const blockElement = scene.getObjectByName(id);
+    if (event.face && blockElement?.userData.isClosest) {
+      // Ensure the materialIndex is within bounds
+      const faceIndex = event.face.materialIndex;
+      if (faceIndex >= 0 && faceIndex < materials.length) {
+        setHoveredFace(faceIndex);
+      }
+    }
+  };
+
+  const handlePointerOut = () => {
+    setHoveredFace(null);
+  };
+
+  const handleHoverMove = (event: ThreeEvent<PointerEvent>) => {
+    const blockElement = scene.getObjectByName(id);
+    if (event.face && blockElement?.userData.isClosest) {
+      const faceIndex = event.face.materialIndex;
+      if (faceIndex >= 0 && faceIndex < materials.length) {
+        setHoveredFace(faceIndex);
+      }
+    }
+  };
+
   return (
     <mesh
       ref={ref}
@@ -61,13 +117,22 @@ export default function Block({ position, color, id }: BlockProps) {
       onClick={handleClick}
       onContextMenu={handleClick}
       onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
+      onPointerMove={(e) => {
+        handleDragMove(e);
+        handleHoverMove(e);
+      }}
       onPointerUp={handlePointerUp}
+      onPointerOver={handlePointerOver}
+      onPointerOut={handlePointerOut}
+      name={id}
+      userData={{ blockId: id }}
       castShadow
       receiveShadow
     >
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={color} roughness={0.1} metalness={0.1} />
+      {materials.map((material, index) => (
+        <primitive key={index} object={material} attach={`material-${index}`} />
+      ))}
     </mesh>
   );
 }
