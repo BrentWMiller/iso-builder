@@ -107,7 +107,7 @@ export default function Scene() {
     >
       <Canvas
         camera={{
-          position: [15, 15, 15],
+          position: [20, 20, 20],
           fov: 50,
           near: 0.1,
           far: 1000,
