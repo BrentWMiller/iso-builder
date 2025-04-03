@@ -14,7 +14,7 @@ export default function ColorToolbar() {
   const setSelectedColor = useGameStore((state) => state.setSelectedColor);
 
   return (
-    <div className='fixed bottom-6 left-1/2 -translate-x-1/2 flex flex-col gap-2 bg-black/90 backdrop-blur-md p-3 rounded-xl shadow-lg border border-white/10 z-50'>
+    <div className='fixed bottom-6 left-1/2 -translate-x-1/2 flex flex-col gap-2 bg-black/10 backdrop-blur-md p-3 rounded-xl shadow-lg border border-white/10 z-50'>
       <div className='sr-only'>Color Palette</div>
       <div className='flex items-center gap-2'>
         {COLORS.map(({ color, label }) => (
@@ -27,7 +27,7 @@ export default function ColorToolbar() {
             onClick={() => setSelectedColor(color)}
             aria-label={`Select ${label} color`}
           >
-            <div className='absolute bottom-0 left-0 right-0 h-1 bg-black/20'></div>
+            <div className='absolute bottom-0 left-0 right-0 h-1.5 bg-black/5 rounded-full'></div>
           </button>
         ))}
       </div>
