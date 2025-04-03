@@ -1,21 +1,43 @@
 import { useRef } from 'react';
 import { Mesh, Vector3 } from 'three';
+import { useGameStore } from '../../store/gameState';
 
 interface BlockProps {
   position: Vector3;
   color: string;
-  onBlockClick: (position: Vector3, face: { normal: Vector3 }) => void;
 }
 
-export default function Block({ position, color, onBlockClick }: BlockProps) {
+export default function Block({ position, color }: BlockProps) {
   const ref = useRef<Mesh>(null);
+  const addBlock = useGameStore((state) => state.addBlock);
+  const blocks = useGameStore((state) => state.blocks);
+  const selectedBlockType = useGameStore((state) => state.selectedBlockType);
+  const selectedColor = useGameStore((state) => state.selectedColor);
+
+  const isBlockAtPosition = (pos: Vector3) => {
+    return blocks.some(
+      (block) => Math.abs(block.position.x - pos.x) < 0.1 && Math.abs(block.position.y - pos.y) < 0.1 && Math.abs(block.position.z - pos.z) < 0.1
+    );
+  };
 
   const handleClick = (event: { stopPropagation: () => void; face?: { normal: Vector3 } }) => {
     event.stopPropagation();
-    // Only handle clicks on the top face
-    if (event.face?.normal.y === 1) {
-      onBlockClick(position, event.face);
-    }
+
+    if (!event.face) return;
+
+    // Calculate new block position based on face normal
+    const normal = event.face.normal;
+    const newPosition = new Vector3(position.x + normal.x, position.y + normal.y, position.z + normal.z);
+
+    // Check if there's already a block at the target position
+    if (isBlockAtPosition(newPosition)) return;
+
+    // Add the new block
+    addBlock({
+      position: newPosition,
+      type: selectedBlockType,
+      color: selectedColor,
+    });
   };
 
   return (
