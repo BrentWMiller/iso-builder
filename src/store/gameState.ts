@@ -169,14 +169,15 @@ const store = create<GameState & GameActions>()(
         const state = store.getState();
         const build = state.savedBuilds.find((b: SavedBuild) => b.id === id);
         if (!build) return '';
-        return JSON.stringify(build);
+        return btoa(JSON.stringify(build));
       },
 
       importBuild: (data: string) =>
         set(
           produce((state: GameState) => {
             try {
-              const build = JSON.parse(data) as SavedBuild;
+              const decodedData = atob(data);
+              const build = JSON.parse(decodedData) as SavedBuild;
               build.blocks = convertBlocksToVector3(build.blocks);
               build.id = generateId();
               build.createdAt = Date.now();

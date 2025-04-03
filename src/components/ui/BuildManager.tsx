@@ -29,9 +29,27 @@ export default function BuildManager() {
 
   const handleImport = () => {
     if (importData.trim()) {
-      importBuild(importData.trim());
-      setImportData('');
-      setIsImporting(false);
+      try {
+        // Try to decode the input to validate it's base64
+        atob(importData.trim());
+        importBuild(importData.trim());
+        setImportData('');
+        setIsImporting(false);
+      } catch {
+        // If it's not base64, try to import as plain JSON
+        try {
+          JSON.parse(importData.trim());
+          importBuild(btoa(importData.trim()));
+          setImportData('');
+          setIsImporting(false);
+        } catch (error) {
+          if (error instanceof Error) {
+            console.error('Invalid build data format:', error.message);
+          } else {
+            console.error('Invalid build data format');
+          }
+        }
+      }
     }
   };
 
@@ -56,7 +74,7 @@ export default function BuildManager() {
       </Button>
 
       {isOpen && (
-        <div className='bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-md p-4 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 max-w-sm'>
+        <div className='bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-md p-4 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 max-w-sm max-h-[calc(100vh-8rem)] overflow-y-auto'>
           <div className='flex flex-col gap-4'>
             <div className='flex flex-col gap-2'>
               <h2 className='text-lg font-semibold text-neutral-900 dark:text-neutral-100'>Saved Builds</h2>
@@ -85,7 +103,7 @@ export default function BuildManager() {
                   key={build.id}
                   className='group flex items-center justify-between gap-2 p-2 bg-white/50 dark:bg-neutral-800/50 rounded-md hover:bg-neutral-200/80 dark:hover:bg-neutral-700/80 transition-colors'
                 >
-                  <div className='flex-1'>
+                  <div className='flex-1 text-left'>
                     <div className='font-medium text-neutral-900 dark:text-neutral-100'>{build.name}</div>
                     <div className='text-xs text-neutral-500 dark:text-neutral-400'>Updated: {formatDate(build.updatedAt)}</div>
                   </div>
@@ -94,7 +112,7 @@ export default function BuildManager() {
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='w-8 h-8 text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-200/80 dark:hover:bg-neutral-700/80'
+                        className='text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-200/80 dark:hover:bg-neutral-700/80'
                       >
                         <Menu className='h-5 w-5' />
                       </Button>
@@ -151,7 +169,7 @@ export default function BuildManager() {
                     value={importData}
                     onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setImportData(e.target.value)}
                     placeholder='Paste build data here'
-                    className='bg-white/50 dark:bg-neutral-800/50 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 border-neutral-200 dark:border-neutral-800'
+                    className='max-h-48 bg-white/50 dark:bg-neutral-800/50 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 border-neutral-200 dark:border-neutral-800 resize-none'
                     rows={4}
                   />
                   <Button
