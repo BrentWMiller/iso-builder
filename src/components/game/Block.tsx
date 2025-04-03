@@ -1,8 +1,7 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { Mesh, Vector3, MeshStandardMaterial } from 'three';
 import { useGameStore } from '../../store/gameState';
 import { useDragDetection } from '../../hooks/useDragDetection';
-import { ThreeEvent, useThree } from '@react-three/fiber';
 
 interface BlockProps {
   position: Vector3;
@@ -12,14 +11,14 @@ interface BlockProps {
 
 export default function Block({ position, color, id }: BlockProps) {
   const ref = useRef<Mesh>(null);
-  const [hoveredFace, setHoveredFace] = useState<number | null>(null);
   const { isDragging, handlePointerDown, handlePointerMove: handleDragMove, handlePointerUp } = useDragDetection();
   const addBlock = useGameStore((state) => state.addBlock);
   const removeBlock = useGameStore((state) => state.removeBlock);
   const blocks = useGameStore((state) => state.blocks);
   const selectedBlockType = useGameStore((state) => state.selectedBlockType);
   const selectedColor = useGameStore((state) => state.selectedColor);
-  const { scene } = useThree();
+  const hoveredBlockId = useGameStore((state) => state.hoveredBlockId);
+  const hoveredFaceIndex = useGameStore((state) => state.hoveredFaceIndex);
 
   // Create materials for each face
   const materials = [
@@ -34,7 +33,7 @@ export default function Block({ position, color, id }: BlockProps) {
   // Update material colors based on hover state
   useEffect(() => {
     materials.forEach((material, index) => {
-      if (hoveredFace === index) {
+      if (hoveredBlockId === id && hoveredFaceIndex === index) {
         material.color.setHex(0xadd8e6); // Light blue highlight
       } else {
         material.color.setStyle(color);
@@ -47,7 +46,7 @@ export default function Block({ position, color, id }: BlockProps) {
         material.color.setStyle(color);
       });
     };
-  }, [hoveredFace, color]);
+  }, [color, id, hoveredBlockId, hoveredFaceIndex]);
 
   const isBlockAtPosition = (pos: Vector3) => {
     return blocks.some(
@@ -85,31 +84,6 @@ export default function Block({ position, color, id }: BlockProps) {
     });
   };
 
-  const handlePointerOver = (event: ThreeEvent<PointerEvent>) => {
-    const blockElement = scene.getObjectByName(id);
-    if (event.face && blockElement?.userData.isClosest) {
-      // Ensure the materialIndex is within bounds
-      const faceIndex = event.face.materialIndex;
-      if (faceIndex >= 0 && faceIndex < materials.length) {
-        setHoveredFace(faceIndex);
-      }
-    }
-  };
-
-  const handlePointerOut = () => {
-    setHoveredFace(null);
-  };
-
-  const handleHoverMove = (event: ThreeEvent<PointerEvent>) => {
-    const blockElement = scene.getObjectByName(id);
-    if (event.face && blockElement?.userData.isClosest) {
-      const faceIndex = event.face.materialIndex;
-      if (faceIndex >= 0 && faceIndex < materials.length) {
-        setHoveredFace(faceIndex);
-      }
-    }
-  };
-
   return (
     <mesh
       ref={ref}
@@ -117,13 +91,8 @@ export default function Block({ position, color, id }: BlockProps) {
       onClick={handleClick}
       onContextMenu={handleClick}
       onPointerDown={handlePointerDown}
-      onPointerMove={(e) => {
-        handleDragMove(e);
-        handleHoverMove(e);
-      }}
+      onPointerMove={handleDragMove}
       onPointerUp={handlePointerUp}
-      onPointerOver={handlePointerOver}
-      onPointerOut={handlePointerOut}
       name={id}
       userData={{ blockId: id }}
       castShadow

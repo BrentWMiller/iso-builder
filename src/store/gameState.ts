@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { produce } from 'immer';
-import { Vector3 } from 'three';
-import { Block, BlockType, GameState, GameActions } from './types';
+import { BlockType, GameState, GameActions } from './types';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -11,6 +10,8 @@ const initialState: GameState = {
   selectedColor: '#ffffff',
   history: [[]],
   historyIndex: 0,
+  hoveredBlockId: null,
+  hoveredFaceIndex: null,
 };
 
 export const useGameStore = create<GameState & GameActions>((set) => ({
@@ -52,6 +53,20 @@ export const useGameStore = create<GameState & GameActions>((set) => ({
     set(
       produce((state: GameState) => {
         state.selectedColor = color;
+      })
+    ),
+
+  setHoveredBlock: (id: string | null) =>
+    set(
+      produce((state: GameState) => {
+        state.hoveredBlockId = id;
+      })
+    ),
+
+  setHoveredFace: (index: number | null) =>
+    set(
+      produce((state: GameState) => {
+        state.hoveredFaceIndex = index;
       })
     ),
 

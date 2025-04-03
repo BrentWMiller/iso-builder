@@ -15,6 +15,8 @@ export interface GameState {
   selectedColor: string;
   history: Block[][];
   historyIndex: number;
+  hoveredBlockId: string | null;
+  hoveredFaceIndex: number | null;
 }
 
 export interface GameActions {
@@ -22,6 +24,8 @@ export interface GameActions {
   removeBlock: (id: string) => void;
   setSelectedBlockType: (type: BlockType) => void;
   setSelectedColor: (color: string) => void;
+  setHoveredBlock: (id: string | null) => void;
+  setHoveredFace: (index: number | null) => void;
   undo: () => void;
   redo: () => void;
 }

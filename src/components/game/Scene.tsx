@@ -7,8 +7,13 @@ import Block from './Block';
 import { Raycaster, Vector2 } from 'three';
 import { useEffect } from 'react';
 
+// Add hover state to the game store
+const useHoverStore = useGameStore;
+
 function SceneContent() {
   const blocks = useGameStore((state) => state.blocks);
+  const setHoveredBlock = useGameStore((state) => state.setHoveredBlock);
+  const setHoveredFace = useGameStore((state) => state.setHoveredFace);
   const { camera, scene } = useThree();
   const raycaster = new Raycaster();
 
@@ -23,25 +28,27 @@ function SceneContent() {
       // Find all intersected objects
       const intersects = raycaster.intersectObjects(scene.children, true);
 
-      // Find the closest block
-      const closestBlock = intersects.find((intersect) => {
+      // Find the closest block intersection
+      const closestIntersection = intersects.find((intersect) => {
         const block = blocks.find((b) => b.id === intersect.object.userData.blockId);
         return block !== undefined;
       });
 
-      // Update hover state for all blocks
-      blocks.forEach((block) => {
-        const blockElement = scene.getObjectByName(block.id);
-        if (blockElement) {
-          const isClosest = closestBlock?.object.userData.blockId === block.id;
-          blockElement.userData.isClosest = isClosest;
-        }
-      });
+      // Update hover state
+      if (closestIntersection) {
+        const blockId = closestIntersection.object.userData.blockId;
+        const faceIndex = closestIntersection.face?.materialIndex ?? null;
+        setHoveredBlock(blockId);
+        setHoveredFace(faceIndex);
+      } else {
+        setHoveredBlock(null);
+        setHoveredFace(null);
+      }
     };
 
     window.addEventListener('pointermove', handlePointerMove);
     return () => window.removeEventListener('pointermove', handlePointerMove);
-  }, [blocks, camera, scene]);
+  }, [blocks, camera, scene, setHoveredBlock, setHoveredFace]);
 
   return (
     <>
