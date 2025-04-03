@@ -8,6 +8,7 @@ import { Raycaster, Vector2 } from 'three';
 import { useEffect } from 'react';
 import ColorToolbar from '../ui/ColorToolbar';
 import ThemeToggle from '../ui/ThemeToggle';
+import BuildManager from '../ui/BuildManager';
 
 function SceneContent() {
   const blocks = useGameStore((state) => state.blocks);
@@ -122,6 +123,7 @@ export default function Scene() {
         <div style={{ pointerEvents: 'auto' }}>
           <ColorToolbar />
           <ThemeToggle />
+          <BuildManager />
         </div>
       </div>
     </div>
