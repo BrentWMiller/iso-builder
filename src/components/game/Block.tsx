@@ -1,15 +1,17 @@
 import { useRef, useEffect } from 'react';
-import { Mesh, Vector3, MeshStandardMaterial } from 'three';
+import { Mesh, Vector3 } from 'three';
 import { useGameStore } from '../../store/gameState';
 import { useDragDetection } from '../../hooks/useDragDetection';
+import { blockPluginRegistry } from '../../plugins/blocks';
 
 interface BlockProps {
   position: Vector3;
   color: string;
   id: string;
+  type: string;
 }
 
-export default function Block({ position, color, id }: BlockProps) {
+export default function Block({ position, color, id, type }: BlockProps) {
   const ref = useRef<Mesh>(null);
   const { isDragging, handlePointerDown, handlePointerMove: handleDragMove, handlePointerUp } = useDragDetection();
   const addBlock = useGameStore((state) => state.addBlock);
@@ -20,18 +22,13 @@ export default function Block({ position, color, id }: BlockProps) {
   const hoveredBlockId = useGameStore((state) => state.hoveredBlockId);
   const hoveredFaceIndex = useGameStore((state) => state.hoveredFaceIndex);
 
-  // Create materials for each face
-  const materials = [
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // right
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // left
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // top
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // bottom
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // front
-    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, emissive: 0x000000 }), // back
-  ];
+  const plugin = blockPluginRegistry.get(type);
+  const { mesh, materials } = plugin?.createMesh(color) || { mesh: null, materials: [] };
 
   // Update material colors based on hover state
   useEffect(() => {
+    if (!materials.length) return;
+
     materials.forEach((material, index) => {
       if (hoveredBlockId === id && hoveredFaceIndex === index) {
         material.color.setHex(0xadd8e6); // Simple light blue highlight
@@ -46,7 +43,7 @@ export default function Block({ position, color, id }: BlockProps) {
         material.color.setStyle(color);
       });
     };
-  }, [color, id, hoveredBlockId, hoveredFaceIndex]);
+  }, [color, id, hoveredBlockId, hoveredFaceIndex, materials]);
 
   const isBlockAtPosition = (pos: Vector3) => {
     return blocks.some(
@@ -54,7 +51,13 @@ export default function Block({ position, color, id }: BlockProps) {
     );
   };
 
-  const handleClick = (event: { stopPropagation: () => void; face?: { normal: Vector3 }; button?: number }) => {
+  const handleClick = (event: {
+    stopPropagation: () => void;
+    face?: {
+      normal: Vector3;
+    };
+    button?: number;
+  }) => {
     event.stopPropagation();
 
     // Don't add/remove blocks if we were dragging
@@ -73,6 +76,8 @@ export default function Block({ position, color, id }: BlockProps) {
     const normal = event.face.normal;
     const newPosition = new Vector3(position.x + normal.x, position.y + normal.y, position.z + normal.z);
 
+    console.log('Placing block with normal:', [normal.x, normal.y, normal.z], 'new position:', [newPosition.x, newPosition.y, newPosition.z]);
+
     // Check if there's already a block at the target position
     if (isBlockAtPosition(newPosition)) return;
 
@@ -84,9 +89,15 @@ export default function Block({ position, color, id }: BlockProps) {
     });
   };
 
+  if (!plugin || !mesh) {
+    console.error(`No plugin found for block type: ${type}`);
+    return null;
+  }
+
   return (
-    <mesh
+    <primitive
       ref={ref}
+      object={mesh}
       position={position}
       onClick={handleClick}
       onContextMenu={handleClick}
@@ -97,11 +108,6 @@ export default function Block({ position, color, id }: BlockProps) {
       userData={{ blockId: id }}
       castShadow
       receiveShadow
-    >
-      <boxGeometry args={[1, 1, 1]} />
-      {materials.map((material, index) => (
-        <primitive key={index} object={material} attach={`material-${index}`} />
-      ))}
-    </mesh>
+    />
   );
 }
