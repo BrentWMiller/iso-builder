@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
+import React from 'react';
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
@@ -10,7 +11,7 @@ global.ResizeObserver = class ResizeObserver {
 
 // Mock requestAnimationFrame
 global.requestAnimationFrame = vi.fn((callback) => {
-  callback(0);
+  setTimeout(callback, 0);
   return 0;
 });
 
@@ -65,3 +66,15 @@ const getContextProxy = new Proxy(HTMLCanvasElement.prototype.getContext, {
 });
 
 HTMLCanvasElement.prototype.getContext = getContextProxy;
+
+// Mock framer-motion
+vi.mock('framer-motion', async () => {
+  const actual = await vi.importActual('framer-motion');
+  return {
+    ...actual,
+    motion: {
+      button: ({ children, ...props }: React.ComponentProps<'button'>) => React.createElement('button', props, children),
+      svg: ({ children, ...props }: React.ComponentProps<'svg'>) => React.createElement('svg', props, children),
+    },
+  };
+});

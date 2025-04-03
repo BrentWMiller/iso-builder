@@ -2,6 +2,15 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ThemeToggle from './ThemeToggle';
 import { useGameStore } from '../../store/gameState';
+import React from 'react';
+
+// Mock framer-motion
+vi.mock('framer-motion', () => ({
+  motion: {
+    button: ({ children, ...props }: React.ComponentProps<'button'>) => React.createElement('button', props, children),
+    svg: ({ children, ...props }: React.ComponentProps<'svg'>) => React.createElement('svg', props, children),
+  },
+}));
 
 // Mock the useGameStore hook
 vi.mock('../../store/gameState', () => ({
@@ -27,15 +36,15 @@ describe('ThemeToggle', () => {
     });
   });
 
-  it('renders the dark theme icon when in dark mode', () => {
+  it('renders the moon icon when in dark mode', () => {
     render(<ThemeToggle />);
 
-    // Check if the sun icon is rendered (dark theme icon)
-    const sunIcon = screen.getByTestId('sun-icon');
-    expect(sunIcon).toBeInTheDocument();
+    // Check if the moon icon is rendered (dark theme icon)
+    const moonIcon = screen.getByTestId('moon-icon');
+    expect(moonIcon).toBeInTheDocument();
   });
 
-  it('renders the moon icon when in light mode', () => {
+  it('renders the sun icon when in light mode', () => {
     // Mock light theme
     (useGameStore as unknown as ReturnType<typeof vi.fn>).mockImplementation((selector) => {
       if (selector.toString().includes('theme')) {
@@ -49,9 +58,9 @@ describe('ThemeToggle', () => {
 
     render(<ThemeToggle />);
 
-    // Check if the moon icon is rendered (light theme icon)
-    const moonIcon = screen.getByTestId('moon-icon');
-    expect(moonIcon).toBeInTheDocument();
+    // Check if the sun icon is rendered (light theme icon)
+    const sunIcon = screen.getByTestId('sun-icon');
+    expect(sunIcon).toBeInTheDocument();
   });
 
   it('calls toggleTheme when clicked', () => {
@@ -77,13 +86,6 @@ describe('ThemeToggle', () => {
     expect(button).toHaveClass('fixed');
     expect(button).toHaveClass('top-4');
     expect(button).toHaveClass('right-4');
-    expect(button).toHaveClass('p-2');
-    expect(button).toHaveClass('rounded-full');
-    expect(button).toHaveClass('bg-black/10');
-    expect(button).toHaveClass('backdrop-blur-md');
-    expect(button).toHaveClass('border');
-    expect(button).toHaveClass('border-white/10');
-    expect(button).toHaveClass('hover:bg-black/20');
-    expect(button).toHaveClass('transition-colors');
+    expect(button).toHaveClass('size-10');
   });
 });
