@@ -22,12 +22,12 @@ export default function Block({ position, color, id }: BlockProps) {
 
   // Create materials for each face
   const materials = [
-    new MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.1 }), // right
-    new MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.1 }), // left
-    new MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.1 }), // top
-    new MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.1 }), // bottom
-    new MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.1 }), // front
-    new MeshStandardMaterial({ color, roughness: 0.1, metalness: 0.1 }), // back
+    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05 }), // right
+    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05 }), // left
+    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05 }), // top
+    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05 }), // bottom
+    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05 }), // front
+    new MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05 }), // back
   ];
 
   // Update material colors based on hover state
